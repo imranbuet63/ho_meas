@@ -328,6 +328,7 @@ typedef struct
 #define NFAPI_NR_CONFIG_SLOT_CONFIG_TAG 0x1027
 
 #define NFAPI_NR_CONFIG_RSSI_MEASUREMENT_TAG 0x1028
+#define NFAPI_NR_CONFIG_TDD_TABLE 0x1035
 
 //table 3-21
 typedef struct 
@@ -1502,7 +1503,7 @@ typedef struct
   uint32_t handle;
   uint16_t rnti;
   uint8_t  harq_id;
-  uint16_t pdu_length;
+  uint32_t pdu_length;// For Aerial, RX_DATA.indication PDULength is changed to 32 bit field
   uint8_t  ul_cqi;
   uint16_t timing_advance;//Timing advance 𝑇𝐴 measured for the UE [TS 38.213, Section 4.2] NTA_new = NTA_old + (TA − 31) ⋅ 16 ⋅ 64⁄2μ Value: 0 → 63 0xffff should be set if this field is invalid
   uint16_t rssi;

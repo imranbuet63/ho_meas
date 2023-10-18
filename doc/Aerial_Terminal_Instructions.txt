@@ -1,0 +1,111 @@
+#####################
+#	PRE-REQUISITES  #
+#####################
+
+to build on non cuBB systems, the projects depends on:
+
+DPDK : get 21.08.0 tar.xz version from here: https://core.dpdk.org/download/
+
+wget https://fast.dpdk.org/rel/dpdk-21.08.tar.xz
+
+then follow these steps to install:
+http://doc.dpdk.org/guides/linux_gsg/build_dpdk.html#compiling-and-installing-dpdk-system-wide
+
+tar xJf dpdk-<version>.tar.xz
+cd dpdk-<version>
+
+mkdir build
+
+#if meson is not install, install by running>
+sudo pip3 install meson
+
+meson build 
+# If 'meson build' gives an error regarding elftools python module missing, install by running: 
+pip3 install pyelftools
+
+cd build
+
+ninja 
+
+ninja install
+
+sudo ldconfig
+
+#########################
+#   Old Instructions    #
+#########################
+https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/develop/doc/RUN_NR_NFAPI.md
+
+#########################
+#  VNF for Aerial (NR)  #
+#########################
+
+git clone https://gitlab.eurecom.fr/rssilva/openairinterface5g.git
+
+# UPDATE GIT branch on aerial server
+git checkout NVIDIA_Integration
+
+# Build
+cd ~/openairinterface5g/
+source oaienv
+cd cmake_targets/
+#first time after pulling from gitlab:
+./build_oai --gNB --ninja -C
+#further compilations after changes:
+cd ran_build/build
+make nr-softmodem
+
+# Run
+cd ~/openairinterface5g/
+source oaienv
+cd cmake_targets/ran_build/build
+./nr-softmodem -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/vnf.sa.band78.fr1.273PRB.Aerial.conf --nfapi aerial --sa
+
+# To not transmit pdsch and pdcch omit --sa
+
+#########################
+#   Run with CN5G (NR)  #
+#########################
+# Setup CN5G in devkit2
+
+# Add static route to CN5G in devkit1:
+sudo ip route add 192.168.70.128/26 via 172.21.16.131 dev eno1
+
+# Start OAI CN5G
+cd ~/oai-cn5g-fed/docker-compose
+python3 core-network.py --type start-basic --scenario 1
+
+# Stop OAI CN5G
+cd ~/oai-cn5g-fed/docker-compose
+python3 core-network.py --type stop-basic --scenario 1
+
+# in devkit 2, upon startup:
+sudo sysctl net.ipv4.conf.all.forwarding=1
+sudo iptables -P FORWARD ACCEPT
+
+#########################
+#    Useful commands    #
+#########################
+
+## change nvlog log levels
+nano -c $cuBB_SDK/cuPHY-CP/gt_common_libs/nvlog/config/nvlog_config.yaml
+
+## pcap collect
+$cuBB_SDK/build/cuPHY-CP/gt_common_libs/nvlog/pcap_collect
+
+## nvlog collect
+$cuBB_SDK/build/cuPHY-CP/gt_common_libs/nvlog/nvlog_collect phy 
+
+# Present in 22-2-2 guide:
+# Before running cuBB test case, please restart MPS in each run. Run the following commands to export environment variables and restart MPS in the cuphycontroller terminal (do not run this for test_mac and ru-emulator).
+# Export variables
+export CUDA_DEVICE_MAX_CONNECTIONS=8
+export CUDA_MPS_PIPE_DIRECTORY=/var
+export CUDA_MPS_LOG_DIRECTORY=/var
+
+# Stop existing MPS
+sudo -E echo quit | sudo -E nvidia-cuda-mps-control
+
+# Start MPS
+sudo -E nvidia-cuda-mps-control -d
+sudo -E echo start_server -uid 0 | sudo -E nvidia-cuda-mps-control

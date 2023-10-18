@@ -81,6 +81,19 @@ void handle_nr_rach(NR_UL_IND_t *UL_info)
           UL_info->frame, UL_info->slot, UL_info->rach_ind.sfn, UL_info->rach_ind.slot);
     for (int i = 0; i < UL_info->rach_ind.number_of_pdus; i++) {
       UL_info->rach_ind.number_of_pdus--;
+      if (UL_info->rach_ind.pdu_list[i].num_preamble > 0) {
+        LOG_I(NR_MAC,"UL_info->rach_ind.pdu_list[%d].preamble_list[%d].preamble_pwr = %d\n",i,0,UL_info->rach_ind.pdu_list[i].preamble_list[0].preamble_pwr);
+        if (UL_info->rach_ind.pdu_list[i].preamble_list[0].preamble_pwr < 90000) {
+          continue;
+        }
+        LOG_I(NR_MAC,"preamble_index = %d timing advance = %d\n",UL_info->rach_ind.pdu_list[i].preamble_list[0].preamble_index,UL_info->rach_ind.pdu_list[i].preamble_list[0].timing_advance);
+      }
+
+      if (UL_info->rach_ind.pdu_list[i].num_preamble != 1){
+        LOG_I(NR_MAC,"Num preambles > 1 not handled yet\n");
+        continue;
+      }
+
       AssertFatal(UL_info->rach_ind.pdu_list[i].num_preamble == 1, "More than 1 preamble not supported\n");
       nr_initiate_ra_proc(UL_info->module_id,
                           UL_info->CC_id,
@@ -202,12 +215,12 @@ void handle_nr_ulsch(NR_UL_IND_t *UL_info)
                 UL_info->CC_id,
                 UL_info->rx_ind.sfn,
                 UL_info->rx_ind.slot,
-                rx->rnti,
+                crc->rnti,
                 crc->tb_crc_status ? NULL : rx->pdu,
                 rx->pdu_length,
-                rx->timing_advance,
-                rx->ul_cqi,
-                rx->rssi);
+                crc->timing_advance,
+                crc->ul_cqi,
+                crc->rssi);
       handle_nr_ul_harq(UL_info->CC_id, UL_info->module_id, UL_info->frame, UL_info->slot, crc);
     }
   }
@@ -403,7 +416,7 @@ void NR_UL_indication(NR_UL_IND_t *UL_info) {
   nfapi_nr_uci_indication_t *uci_ind = NULL;
   nfapi_nr_rx_data_indication_t *rx_ind = NULL;
   nfapi_nr_crc_indication_t *crc_ind = NULL;
-  if (get_softmodem_params()->emulate_l1)
+  if (get_softmodem_params()->emulate_l1 || NFAPI_MODE == NFAPI_MODE_AERIAL)
   {
     if (gnb_rach_ind_queue.num_items > 0) {
       LOG_D(NR_MAC, "gnb_rach_ind_queue size = %zu\n", gnb_rach_ind_queue.num_items);
@@ -446,7 +459,7 @@ void NR_UL_indication(NR_UL_IND_t *UL_info) {
   handle_nr_ulsch(UL_info);
   handle_nr_srs(UL_info);
 
-  if (get_softmodem_params()->emulate_l1) {
+  if (get_softmodem_params()->emulate_l1 || NFAPI_MODE == NFAPI_MODE_AERIAL) {
     free_unqueued_nfapi_indications(rach_ind, uci_ind, rx_ind, crc_ind);
   }
   if (NFAPI_MODE != NFAPI_MODE_PNF) {

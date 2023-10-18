@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <assert.h>
+#include <fapi/oai-integration/fapi_nvIPC.h>
 
 #include "vnf_p7.h"
 

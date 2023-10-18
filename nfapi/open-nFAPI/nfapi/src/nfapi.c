@@ -52,6 +52,7 @@
 #include <nfapi_nr_interface_scf.h>
 #include <nfapi.h>
 #include <debug.h>
+#include "nfapi_nr_interface_scf.h"
 
 // What to do when an error happens (e.g., a push or pull fails)
 static inline void on_error()
@@ -102,8 +103,13 @@ uint8_t push16(uint16_t in, uint8_t **out, uint8_t *end) {
   uint8_t *pOut = *out;
 
   if((end - pOut) >= 2) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    pOut[1] = (in & 0xFF00) >> 8;
+    pOut[0] = (in & 0xFF);
+#else
     pOut[0] = (in & 0xFF00) >> 8;
     pOut[1] = (in & 0xFF);
+#endif
     (*out)+=2;
     return 2;
   } else {
@@ -117,8 +123,13 @@ uint8_t pushs16(int16_t in, uint8_t **out, uint8_t *end) {
   uint8_t *pOut = *out;
 
   if((end - pOut) >= 2) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    pOut[1] = (in & 0xFF00) >> 8;
+    pOut[0] = (in & 0xFF);
+#else
     pOut[0] = (in & 0xFF00) >> 8;
     pOut[1] = (in & 0xFF);
+#endif
     (*out)+=2;
     return 2;
   } else {
@@ -132,10 +143,17 @@ uint8_t push32(uint32_t in, uint8_t **out, uint8_t *end) {
   uint8_t *pOut = *out;
 
   if((end - pOut) >= 4) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    pOut[3] = (in & 0xFF000000) >> 24;
+    pOut[2] = (in & 0xFF0000) >> 16;
+    pOut[1] = (in & 0xFF00) >> 8;
+    pOut[0] = (in & 0xFF);
+#else
     pOut[0] = (in & 0xFF000000) >> 24;
     pOut[1] = (in & 0xFF0000) >> 16;
     pOut[2] = (in & 0xFF00) >> 8;
     pOut[3] = (in & 0xFF);
+#endif
     (*out)+=4;
     return 4;
   } else {
@@ -149,10 +167,17 @@ uint8_t pushs32(int32_t in, uint8_t **out, uint8_t *end) {
   uint8_t *pOut = *out;
 
   if((end - pOut) >= 4) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    pOut[3] = (in & 0xFF000000) >> 24;
+    pOut[2] = (in & 0xFF0000) >> 16;
+    pOut[1] = (in & 0xFF00) >> 8;
+    pOut[0] = (in & 0xFF);
+#else
     pOut[0] = (in & 0xFF000000) >> 24;
     pOut[1] = (in & 0xFF0000) >> 16;
     pOut[2] = (in & 0xFF00) >> 8;
     pOut[3] = (in & 0xFF);
+#endif
     (*out)+=4;
     return 4;
   } else {
@@ -194,7 +219,11 @@ uint8_t pull16(uint8_t **in, uint16_t *out, uint8_t *end) {
   uint8_t *pIn = *in;
 
   if((end - pIn) >=2 ) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    *out = ((pIn[1]) << 8) | pIn[0];
+#else
     *out = ((pIn[0]) << 8) | pIn[1];
+#endif
     (*in)+=2;
     return 2;
   } else {
@@ -208,7 +237,11 @@ uint8_t pulls16(uint8_t **in, int16_t *out, uint8_t *end) {
   uint8_t *pIn = *in;
 
   if((end - pIn) >=2 ) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    *out = ((pIn[1]) << 8) | pIn[0];
+#else
     *out = ((pIn[0]) << 8) | pIn[1];
+#endif
     (*in)+=2;
     return 2;
   } else {
@@ -222,7 +255,11 @@ uint8_t pull32(uint8_t **in, uint32_t *out, uint8_t *end) {
   uint8_t *pIn = *in;
 
   if((end - pIn) >= 4) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    *out = ((uint32_t)pIn[3] << 24) | (pIn[2] << 16) | (pIn[1] << 8) | pIn[0];
+#else
     *out = ((uint32_t)pIn[0] << 24) | (pIn[1] << 16) | (pIn[2] << 8) | pIn[3];
+#endif
     (*in) += 4;
     return 4;
   } else {
@@ -236,7 +273,11 @@ uint8_t pulls32(uint8_t **in, int32_t *out, uint8_t *end) {
   uint8_t *pIn = *in;
 
   if((end - pIn) >=4 ) {
+#ifdef FAPI_BYTE_ORDERING_BIG_ENDIAN
+    *out = (pIn[3] << 24) | (pIn[2] << 16) | (pIn[1] << 8) | pIn[0];
+#else
     *out = (pIn[0] << 24) | (pIn[1] << 16) | (pIn[2] << 8) | pIn[3];
+#endif
     (*in)+=4;
     return 4;
   } else {
@@ -693,6 +734,11 @@ int unpack_tlv_list(unpack_tlv_t unpack_fns[], uint16_t size, uint8_t **ppReadPa
           NFAPI_TRACE(NFAPI_TRACE_ERROR, "Warning tlv tag 0x%x length %d not equal to unpack %ld\n", tl->tag, tl->length, (*ppReadPackedMsg - pStartOfValue));
           on_error();
         }
+        // Remove padding that ensures multiple of 4 bytes (SCF 225 Section 2.3.2.1)
+        int padding = ( 4 - (tl->length % 4) ) % 4;
+        if (padding != 0) {
+          (*ppReadPackedMsg) += padding;
+        }
       }
     }
 
@@ -716,7 +762,7 @@ int unpack_tlv_list(unpack_tlv_t unpack_fns[], uint16_t size, uint8_t **ppReadPa
 
           if((end - *ppReadPackedMsg) >= generic_tl.length) {
             // Advance past the unknown TLV
-            (*ppReadPackedMsg) += generic_tl.length;
+            (*ppReadPackedMsg) += generic_tl.length + ( 4 - (generic_tl.length % 4) ) % 4;
           } else {
             // go to the end
             return 0;
@@ -734,7 +780,7 @@ int unpack_tlv_list(unpack_tlv_t unpack_fns[], uint16_t size, uint8_t **ppReadPa
 
         if((end - *ppReadPackedMsg) >= generic_tl.length) {
           // Advance past the unknown TLV
-          (*ppReadPackedMsg) += generic_tl.length;
+          (*ppReadPackedMsg) += generic_tl.length + ( 4 - (generic_tl.length % 4) ) % 4;
         } else {
           // go to the end
           return 0;
@@ -839,7 +885,6 @@ int unpack_nr_tlv_list(unpack_tlv_t unpack_fns[],
       }
     }
   }
-
   return 1;
 }
 
@@ -873,6 +918,11 @@ int unpack_p7_tlv_list(unpack_p7_tlv_t unpack_fns[], uint16_t size, uint8_t **pp
           NFAPI_TRACE(NFAPI_TRACE_ERROR, "Warning tlv tag 0x%x length %d not equal to unpack %ld\n", tl->tag, tl->length, (*ppReadPackedMsg - pStartOfValue));
           on_error();
         }
+        // Remove padding that ensures multiple of 4 bytes (SCF 225 Section 2.3.2.1)
+        int padding = ( 4 - (tl->length % 4) ) % 4;
+        if (padding != 0) {
+          (*ppReadPackedMsg) += padding;
+        }
       }
     }
 
@@ -896,7 +946,7 @@ int unpack_p7_tlv_list(unpack_p7_tlv_t unpack_fns[], uint16_t size, uint8_t **pp
 
           if((end - *ppReadPackedMsg) >= generic_tl.length) {
             // Advance past the unknown TLV
-            (*ppReadPackedMsg) += generic_tl.length;
+            (*ppReadPackedMsg) += generic_tl.length + ( 4 - (generic_tl.length % 4) ) % 4;
           } else {
             // got ot the dn
             return 0;
@@ -914,7 +964,7 @@ int unpack_p7_tlv_list(unpack_p7_tlv_t unpack_fns[], uint16_t size, uint8_t **pp
 
         if((end - *ppReadPackedMsg) >= generic_tl.length) {
           // Advance past the unknown TLV
-          (*ppReadPackedMsg) += generic_tl.length;
+          (*ppReadPackedMsg) += generic_tl.length + ( 4 - (generic_tl.length % 4) ) % 4;
         } else {
           // got ot the dn
           return 0;
@@ -1047,6 +1097,12 @@ uint8_t pack_tlv(uint16_t tag, void *tlv, uint8_t **ppWritePackedMsg, uint8_t *e
     tl->length = (*ppWritePackedMsg) - pStartOfValue;
     // rewrite the header with the correct length
     pack_tl(tl, &pStartOfTlv, end);
+    // Add padding that ensures multiple of 4 bytes (SCF 225 Section 2.3.2.1)
+    int padding = ( 4 - (tl->length % 4) ) % 4;
+    if (padding != 0) {
+      memset(*ppWritePackedMsg,0,padding);
+      (*ppWritePackedMsg) += padding;
+    }
   } else {
     if(tl->tag != 0) {
       NFAPI_TRACE(NFAPI_TRACE_WARN, "Warning pack_tlv tag 0x%x does not match expected 0x%x\n", tl->tag, tag);

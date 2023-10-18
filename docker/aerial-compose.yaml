@@ -1,0 +1,26 @@
+version: "3.3"
+
+services:
+    oai-gnb-aerial:
+        image: oai-gnb:aerial-2.0
+        privileged: true
+        network_mode: "host"
+        ipc: "container:c_aerial_aerial"
+        shm_size: "4096m"
+        #cpuset: "6-13"
+        #gpus: "all"
+        container_name: "oai-gnb-aerial"
+        #entrypoint: /bin/bash -c "sleep infinity"
+        environment:
+            #USE_VOLUMED_CONF: True
+            USE_ADDITIONAL_OPTIONS: "--sa --nfapi AERIAL"
+        volumes:
+            - ./targets/PROJECTS/GENERIC-NR-5GC/CONF/vnf.sa.band78.fr1.273PRB.Aerial.conf:/opt/oai-gnb/etc/gnb.conf
+            - /dev/hugepages:/dev/hugepages
+        healthcheck:
+            # pgrep does NOT work
+            test: /bin/bash -c "ps aux | grep -v grep | grep -c softmodem"
+            interval: 10s
+            timeout: 5s
+            retries: 5
+

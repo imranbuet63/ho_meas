@@ -327,8 +327,8 @@ static uint8_t pack_dl_tti_pdsch_pdu_rel15_value(void *tlv, uint8_t **ppWritePac
   }
   // TODO Add TX power info
   // Hardcoded values that represent 0db
-  if (!(push8(8, ppWritePackedMsg, end) && // powerControlOffset
-        push8(1, ppWritePackedMsg, end))) { // powerControlOffsetSS
+  if (!(push8(0, ppWritePackedMsg, end) && // powerControlOffset
+        push8(0, ppWritePackedMsg, end))) { // powerControlOffsetSS
     return 0;
   }
   // TODO Add CBG Fields
@@ -345,9 +345,8 @@ static uint8_t pack_dl_tti_ssb_pdu_rel15_value(void *tlv, uint8_t **ppWritePacke
         && push16(value->ssbOffsetPointA, ppWritePackedMsg, end) && push8(value->bchPayloadFlag, ppWritePackedMsg, end)
         && push8((value->bchPayload >> 16) & 0xff, ppWritePackedMsg, end)
         && push8((value->bchPayload >> 8) & 0xff, ppWritePackedMsg, end) && push8(value->bchPayload & 0xff, ppWritePackedMsg, end)
-        && push8(0, ppWritePackedMsg, end) &&
+        && push8(0, ppWritePackedMsg, end)
         // TODO add Tx Power Info
-        push8(0, ppWritePackedMsg, end) && push8(0, ppWritePackedMsg, end)
         && push16(value->precoding_and_beamforming.num_prgs, ppWritePackedMsg, end)
         && push16(value->precoding_and_beamforming.prg_size, ppWritePackedMsg, end)
         && push8(value->precoding_and_beamforming.dig_bf_interfaces, ppWritePackedMsg, end))) {
@@ -1102,7 +1101,7 @@ static uint8_t pack_ul_tti_request_pusch_pdu(nfapi_nr_pusch_pdu_t *pusch_pdu, ui
 }
 
 static uint8_t pack_ul_tti_request_srs_pdu(nfapi_nr_srs_pdu_t *srs_pdu, uint8_t **ppWritePackedMsg, uint8_t *end) {
-  return(
+  if(!(
           push16(srs_pdu->rnti, ppWritePackedMsg, end) &&
           push32(srs_pdu->handle, ppWritePackedMsg, end) &&
           push16(srs_pdu->bwp_size, ppWritePackedMsg, end) &&
@@ -1127,7 +1126,23 @@ static uint8_t pack_ul_tti_request_srs_pdu(nfapi_nr_srs_pdu_t *srs_pdu, uint8_t 
           push16(srs_pdu->t_srs, ppWritePackedMsg, end) &&
           push16(srs_pdu->t_offset, ppWritePackedMsg, end)
           // TODO: ignoring beamforming tlv for now
-        );
+        )){
+    return 0;
+  }
+  // Rx Beamforming PDU
+  if(!(push16(srs_pdu->beamforming.num_prgs,ppWritePackedMsg,end) &&
+    push16(srs_pdu->beamforming.prg_size,ppWritePackedMsg,end) &&
+    push8(srs_pdu->beamforming.dig_bf_interface,ppWritePackedMsg,end))){
+      return 0;
+  }
+  for(int prg = 0; prg < srs_pdu->beamforming.num_prgs; prg ++){
+    for(int digInt = 0; digInt < srs_pdu->beamforming.dig_bf_interface; digInt++){
+      if(!push16(srs_pdu->beamforming.prgs_list[0].dig_bf_interface_list[0].beam_idx,ppWritePackedMsg,end)){
+        return 0;
+      }
+    }
+  }
+  return 1;
 }
 
 static uint8_t pack_ul_config_request_ulsch_pdu(nfapi_ul_config_ulsch_pdu *ulsch_pdu, uint8_t **ppWritePackedMsg, uint8_t *end) {
@@ -6074,13 +6089,14 @@ static uint8_t unpack_nr_rx_data_indication_body(nfapi_nr_rx_data_pdu_t *value,
                                                  nfapi_p7_codec_config_t *config)
 {
 if (!(pull32(ppReadPackedMsg, &value->handle, end) && pull16(ppReadPackedMsg, &value->rnti, end)
-      && pull8(ppReadPackedMsg, &value->harq_id, end) && pull16(ppReadPackedMsg, &value->pdu_length, end)
+      && pull8(ppReadPackedMsg, &value->harq_id, end) && pull32(ppReadPackedMsg, &value->pdu_length, end)
       && pull8(ppReadPackedMsg, &value->ul_cqi, end) && pull16(ppReadPackedMsg, &value->timing_advance, end)
       && pull16(ppReadPackedMsg, &value->rssi, end)))
       return 0;
 
 uint32_t length = value->pdu_length;
 value->pdu = nfapi_p7_allocate(sizeof(*value->pdu) * length, config);
+end += length; // Aerial, To remove after handling proper unpacking (pdu comes in another buffer)
 if (pullarray8(ppReadPackedMsg, value->pdu, length, length, end) == 0) {
       NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s pullarray8 failure\n", __FUNCTION__);
       return 0;

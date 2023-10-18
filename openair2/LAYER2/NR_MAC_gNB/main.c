@@ -74,7 +74,7 @@ void *nrmac_stats_thread(void *arg) {
     fwrite(output, p - output, 1, file);
     fflush(file);
     sleep(1);
-    fseek(file,0,SEEK_SET);
+    //fseek(file,0,SEEK_SET);
   }
   fclose(file);
   return NULL;

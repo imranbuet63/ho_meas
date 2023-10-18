@@ -223,13 +223,13 @@ NR_pdsch_dmrs_t get_dl_dmrs_params(const NR_ServingCellConfigCommon_t *scc,
 
     switch (Layers) {
       case 1:
-        dmrs.dmrs_ports_id = 0;
-        dmrs.numDmrsCdmGrpsNoData = 1;
+        dmrs.dmrs_ports_id = 3;
+        dmrs.numDmrsCdmGrpsNoData = 2;
         frontloaded_symb = 1;
         break;
       case 2:
-        dmrs.dmrs_ports_id = 2;
-        dmrs.numDmrsCdmGrpsNoData = 1;
+        dmrs.dmrs_ports_id = 7;
+        dmrs.numDmrsCdmGrpsNoData = 2;
         frontloaded_symb = 1;
         break;
       case 3:
@@ -598,6 +598,7 @@ NR_pusch_dmrs_t get_ul_dmrs_params(const NR_ServingCellConfigCommon_t *scc,
   else
     dmrs.num_dmrs_cdm_grps_no_data = 2;
 
+  dmrs.num_dmrs_cdm_grps_no_data = 2;
   NR_DMRS_UplinkConfig_t *NR_DMRS_UplinkConfig = ul_bwp->pusch_Config ?
                                                  (tda_info->mapping_type == typeA ?
                                                  ul_bwp->pusch_Config->dmrs_UplinkForPUSCH_MappingTypeA->choice.setup :
@@ -724,7 +725,7 @@ void config_uldci(const NR_SIB1_t *sib1,
 
       // antenna_ports.val = 0 for transform precoder is disabled, dmrs-Type=1, maxLength=1, Rank=1/2/3/4
       // Antenna Ports
-      dci_pdu_rel15->antenna_ports.val = 0;
+      dci_pdu_rel15->antenna_ports.val = 2;
 
       // DMRS sequence initialization
       dci_pdu_rel15->dmrs_sequence_initialization.val = pusch_pdu->scid;
@@ -790,7 +791,7 @@ void nr_configure_pdcch(nfapi_nr_dl_tti_pdcch_pdu_rel15_t *pdcch_pdu,
     if(is_sib1)
       pdcch_pdu->CoreSetType = NFAPI_NR_CSET_CONFIG_MIB_SIB1;
     else
-      pdcch_pdu->CoreSetType = NFAPI_NR_CSET_CONFIG_PDCCH_CONFIG_CSET_0;
+      pdcch_pdu->CoreSetType = NFAPI_NR_CSET_CONFIG_MIB_SIB1;// NFAPI_NR_CSET_CONFIG_PDCCH_CONFIG_CSET_0;
   } else{
     pdcch_pdu->CoreSetType = NFAPI_NR_CSET_CONFIG_PDCCH_CONFIG;
   }
@@ -1021,6 +1022,18 @@ void nr_configure_pucch(nfapi_nr_pucch_pdu_t *pucch_pdu,
     pucch_pdu->sr_flag = O_sr;
     pucch_pdu->prb_size=1;
   }
+  // Beamforming
+  pucch_pdu->beamforming.num_prgs = 0;
+  pucch_pdu->beamforming.prg_size = 0; // pucch_pdu->prb_size;
+  pucch_pdu->beamforming.dig_bf_interface = 0;
+  if (pucch_pdu->beamforming.prgs_list == NULL) {
+    pucch_pdu->beamforming.prgs_list = calloc(pucch_pdu->beamforming.num_prgs, sizeof(*pucch_pdu->beamforming.prgs_list));
+  }
+  if (pucch_pdu->beamforming.prgs_list[0].dig_bf_interface_list == NULL) {
+    pucch_pdu->beamforming.prgs_list[0].dig_bf_interface_list =
+        calloc(pucch_pdu->beamforming.dig_bf_interface, sizeof(*pucch_pdu->beamforming.prgs_list[0].dig_bf_interface_list));
+  }
+  pucch_pdu->beamforming.prgs_list[0].dig_bf_interface_list[0].beam_idx = 0;
 }
 
 void set_r_pucch_parms(int rsetindex,
@@ -2469,9 +2482,8 @@ void mac_remove_nr_ue(gNB_MAC_INST *nr_mac, rnti_t rnti)
   delete_nr_ue_data(UE, nr_mac->common_channels, &UE_info->uid_allocator);
 }
 
-uint8_t nr_get_tpc(int target, uint8_t cqi, int incr) {
-  // al values passed to this function are x10
-  int snrx10 = (cqi*5) - 640;
+uint8_t nr_get_tpc(int target, int snrx10, int incr) {
+  // all values passed to this function are in dB x10
   if (snrx10 > target + incr) return 0; // decrease 1dB
   if (snrx10 < target - (3*incr)) return 3; // increase 3dB
   if (snrx10 < target - incr) return 2; // increase 1dB
@@ -2605,7 +2617,7 @@ void nr_csirs_scheduling(int Mod_idP, frame_t frame, sub_frame_t slot, int n_slo
           if (nzpcsi->powerControlOffsetSS)
             csirs_pdu_rel15->power_control_offset_ss = *nzpcsi->powerControlOffsetSS;
           else
-            csirs_pdu_rel15->power_control_offset_ss = 1; // 0 dB
+            csirs_pdu_rel15->power_control_offset_ss = 0; // -3 dB
           switch(resourceMapping.frequencyDomainAllocation.present){
             case NR_CSI_RS_ResourceMapping__frequencyDomainAllocation_PR_row1:
               csirs_pdu_rel15->row = 1;

@@ -151,6 +151,13 @@ int do_RRCReestablishment(rrc_gNB_ue_context_t *const ue_context_pP,
 int do_RRCReestablishmentComplete(uint8_t *buffer, size_t buffer_size, int64_t rrc_TransactionIdentifier);
 
 NR_MeasConfig_t *get_defaultMeasConfig(uint32_t absFreqSSB, int band, int scs, const module_id_t module_id);
+NR_MeasConfig_t *get_MeasConfig(uint32_t ssb_arfcn,
+                                int band,
+                                int scs,
+                                const nr_measurement_configuration_t *const measurementConfiguration,
+                                nr_neighbour_gnb_configuration_t **neighbourConfiguration);
+void free_MeasConfig(NR_MeasConfig_t *mc);
+
 void free_defaultMeasConfig(NR_MeasConfig_t *mc);
 uint8_t do_NR_Paging(uint8_t Mod_id, uint8_t *buffer, uint32_t tmsi);
 

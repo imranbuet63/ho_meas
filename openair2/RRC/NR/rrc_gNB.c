@@ -518,6 +518,17 @@ static void rrc_gNB_process_RRCSetupComplete(const protocol_ctxt_t *const ctxt_p
   }
 }
 
+static void clone_MeasConfig(const NR_MeasConfig_t *orig, rrc_gNB_ue_context_t *ue_context_pP)
+{
+  uint8_t buf[16636];
+  asn_enc_rval_t enc_rval = uper_encode_to_buffer(&asn_DEF_NR_MeasConfig, NULL, orig, buf, sizeof(buf));
+  AssertFatal(enc_rval.encoded > 0, "could not clone Meas Config: problem while encoding\n");
+  asn_dec_rval_t dec_rval =
+      uper_decode(NULL, &asn_DEF_NR_MeasConfig, (void **)&ue_context_pP->ue_context.measConfig, buf, enc_rval.encoded, 0, 0);
+  AssertFatal(dec_rval.code == RC_OK && dec_rval.consumed == enc_rval.encoded,
+              "could not clone NR_MeasConfig_t: problem while decoding\n");
+}
+
 //-----------------------------------------------------------------------------
 static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *const ctxt_pP, rrc_gNB_ue_context_t *ue_context_pP)
 //-----------------------------------------------------------------------------
@@ -560,28 +571,33 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   int scs = get_ssb_scs(cell_info);
   int band = get_dl_band(cell_info);
   uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
-  NR_MeasConfig_t *measconfig = get_defaultMeasConfig(ssb_arfcn, band, scs, ctxt_pP->module_id  );
+  //NR_MeasConfig_t *measconfig = get_defaultMeasConfig(ssb_arfcn, band, scs, ctxt_pP->module_id  );
+  measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
   // ue_p->measConfig = measconfig;
   if (measconfig != NULL) {
     free_MeasConfig(ue_p->measConfig);
     ue_p->measConfig = measconfig;
     // clone_MeasConfig(measconfig, ue_context_pP);
   }
-
+  NR_SRB_ToAddModList_t *SRBs = createSRBlist(ue_p, false);
+  NR_DRB_ToAddModList_t *DRBs = createDRBlist(ue_p, false);
+ 
   uint8_t buffer[RRC_BUF_SIZE] = {0};
   int size = do_RRCReconfiguration(ue_p,
                                    buffer,
                                    RRC_BUF_SIZE,
                                    xid,
-                                   NULL, //*SRB_configList2,
-                                   NULL, //*DRB_configList,
+                                   SRBs, //*SRB_configList2,
+                                   DRBs, //*DRB_configList,
                                    NULL,
                                    NULL,
                                    measconfig,
                                    dedicatedNAS_MessageList,
                                    ue_p->masterCellGroup);
   AssertFatal(size > 0, "cannot encode RRCReconfiguration in %s()\n", __func__);
-  free_MeasConfig(ue_p->measConfig);
+  free_MeasConfig(measConfig);
+  freeSRBlist(SRBs);
+  freeDRBlist(DRBs);
   LOG_W(NR_RRC, "do_RRCReconfiguration(): size %d\n", size);
   //free_defaultMeasConfig(measconfig);
 

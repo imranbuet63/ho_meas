@@ -1277,6 +1277,195 @@ NR_MeasConfig_t *get_defaultMeasConfig(uint32_t ssb_arfcn, int band, int scs, co
   asn1cSeqAdd(&mc->quantityConfig->quantityConfigNR_List->list, qcnr_event_a3);
   return mc;
 }
+static NR_ReportConfigToAddMod_t *prepare_periodic_event_report(const NR_PER_EVENT_t *per_event)
+{
+  NR_ReportConfigToAddMod_t *rc = calloc(1, sizeof(*rc));
+  rc->reportConfigId = 1;
+  rc->reportConfig.present = NR_ReportConfigToAddMod__reportConfig_PR_reportConfigNR;
+
+  NR_PeriodicalReportConfig_t *prc = calloc(1, sizeof(*prc));
+  prc->rsType = NR_NR_RS_Type_ssb;
+  prc->reportInterval = NR_ReportInterval_ms1024;
+  prc->reportAmount = NR_PeriodicalReportConfig__reportAmount_infinity;
+  prc->reportQuantityCell.rsrp = true;
+  prc->reportQuantityCell.rsrq = true;
+  prc->reportQuantityCell.sinr = true;
+  prc->reportQuantityRS_Indexes = calloc(1, sizeof(*prc->reportQuantityRS_Indexes));
+  prc->reportQuantityRS_Indexes->rsrp = true;
+  prc->reportQuantityRS_Indexes->rsrq = true;
+  prc->reportQuantityRS_Indexes->sinr = true;
+  asn1cCallocOne(prc->maxNrofRS_IndexesToReport, per_event->maxReportCells);
+  prc->maxReportCells = per_event->maxReportCells;
+  prc->includeBeamMeasurements = per_event->includeBeamMeasurements;
+
+  NR_ReportConfigNR_t *rcnr = calloc(1, sizeof(*rcnr));
+  rcnr->reportType.present = NR_ReportConfigNR__reportType_PR_periodical;
+  rcnr->reportType.choice.periodical = prc;
+
+  rc->reportConfig.choice.reportConfigNR = rcnr;
+  return rc;
+}
+
+static NR_ReportConfigToAddMod_t *prepare_a2_event_report(const NR_A2_EVENT_t *a2_event)
+{
+  NR_ReportConfigToAddMod_t *rc_A2 = calloc(1, sizeof(*rc_A2));
+  rc_A2->reportConfigId = 2;
+  rc_A2->reportConfig.present = NR_ReportConfigToAddMod__reportConfig_PR_reportConfigNR;
+  NR_EventTriggerConfig_t *etrc_A2 = calloc(1, sizeof(*etrc_A2));
+  etrc_A2->eventId.present = NR_EventTriggerConfig__eventId_PR_eventA2;
+  etrc_A2->eventId.choice.eventA2 = calloc(1, sizeof(*etrc_A2->eventId.choice.eventA2));
+  etrc_A2->eventId.choice.eventA2->a2_Threshold.present = NR_MeasTriggerQuantity_PR_rsrp;
+  etrc_A2->eventId.choice.eventA2->a2_Threshold.choice.rsrp = a2_event->threshold_RSRP;
+  etrc_A2->eventId.choice.eventA2->reportOnLeave = false;
+  etrc_A2->eventId.choice.eventA2->hysteresis = 0;
+  etrc_A2->eventId.choice.eventA2->timeToTrigger = a2_event->timeToTrigger;
+  etrc_A2->rsType = NR_NR_RS_Type_ssb;
+  etrc_A2->reportInterval = NR_ReportInterval_ms480;
+  etrc_A2->reportAmount = NR_EventTriggerConfig__reportAmount_r4;
+  etrc_A2->reportQuantityCell.rsrp = true;
+  etrc_A2->reportQuantityCell.rsrq = true;
+  etrc_A2->reportQuantityCell.sinr = true;
+  asn1cCallocOne(etrc_A2->maxNrofRS_IndexesToReport, 4);
+  etrc_A2->maxReportCells = 1;
+  etrc_A2->includeBeamMeasurements = false;
+  NR_ReportConfigNR_t *rcnr_A2 = calloc(1, sizeof(*rcnr_A2));
+  rcnr_A2->reportType.present = NR_ReportConfigNR__reportType_PR_eventTriggered;
+  rcnr_A2->reportType.choice.eventTriggered = etrc_A2;
+  rc_A2->reportConfig.choice.reportConfigNR = rcnr_A2;
+
+  return rc_A2;
+}
+
+static NR_ReportConfigToAddMod_t *prepare_a3_event_report(const NR_A3_EVENT_t *a3_event)
+{
+  NR_ReportConfigToAddMod_t *rc_A3 = calloc(1, sizeof(*rc_A3));
+  rc_A3->reportConfigId = a3_event->cell_id == -1 ? 3 : a3_event->cell_id + 4; // 3 is default RC ID. So cellId(0) starts from 4
+  rc_A3->reportConfig.present = NR_ReportConfigToAddMod__reportConfig_PR_reportConfigNR;
+  NR_EventTriggerConfig_t *etrc_A3 = calloc(1, sizeof(*etrc_A3));
+  etrc_A3->eventId.present = NR_EventTriggerConfig__eventId_PR_eventA3;
+  etrc_A3->eventId.choice.eventA3 = calloc(1, sizeof(*etrc_A3->eventId.choice.eventA3));
+  etrc_A3->eventId.choice.eventA3->a3_Offset.present = NR_MeasTriggerQuantityOffset_PR_rsrp;
+  etrc_A3->eventId.choice.eventA3->a3_Offset.choice.rsrp = a3_event->a3_offset;
+  etrc_A3->eventId.choice.eventA3->reportOnLeave = true;
+  etrc_A3->eventId.choice.eventA3->hysteresis = a3_event->hysteresis;
+  etrc_A3->eventId.choice.eventA3->timeToTrigger = a3_event->timeToTrigger;
+  etrc_A3->rsType = NR_NR_RS_Type_ssb;
+  etrc_A3->reportInterval = NR_ReportInterval_ms1024;
+  etrc_A3->reportAmount = NR_EventTriggerConfig__reportAmount_r4;
+  etrc_A3->reportQuantityCell.rsrp = true;
+  etrc_A3->reportQuantityCell.rsrq = true;
+  etrc_A3->reportQuantityCell.sinr = true;
+  asn1cCallocOne(etrc_A3->maxNrofRS_IndexesToReport, 4);
+  etrc_A3->maxReportCells = 4;
+  etrc_A3->includeBeamMeasurements = false;
+  NR_ReportConfigNR_t *rcnr_A3 = calloc(1, sizeof(*rcnr_A3));
+  rcnr_A3->reportType.present = NR_ReportConfigNR__reportType_PR_eventTriggered;
+  rcnr_A3->reportType.choice.eventTriggered = etrc_A3;
+  rc_A3->reportConfig.choice.reportConfigNR = rcnr_A3;
+  return rc_A3;
+}
+NR_MeasConfig_t *get_MeasConfig(uint32_t ssb_arfcn,
+                                int band,
+                                int scs,
+                                const nr_measurement_configuration_t *const measurementConfiguration,
+                                nr_neighbour_gnb_configuration_t **neighbourConfiguration)
+{
+  if (!measurementConfiguration)
+    return NULL;
+
+  if (!measurementConfiguration->a2_event && !measurementConfiguration->per_event && !measurementConfiguration->a3_event_list[0]) {
+    LOG_D(NR_RRC, "NR Measurements are not configured in the conf file\n");
+    return NULL;
+  }
+
+  NR_MeasConfig_t *mc = calloc(1, sizeof(*mc));
+  mc->measObjectToAddModList = calloc(1, sizeof(*mc->measObjectToAddModList));
+  mc->reportConfigToAddModList = calloc(1, sizeof(*mc->reportConfigToAddModList));
+  mc->measIdToAddModList = calloc(1, sizeof(*mc->measIdToAddModList));
+
+  if (measurementConfiguration->per_event) {
+    LOG_D(NR_RRC, "HO LOG: Preparing A3 Event Measurement Configuration!\n");
+    NR_ReportConfigToAddMod_t *rc_PER = prepare_periodic_event_report(measurementConfiguration->per_event);
+    asn1cSeqAdd(&mc->reportConfigToAddModList->list, rc_PER);
+  }
+
+  if (measurementConfiguration->a2_event) {
+    LOG_D(NR_RRC, "HO LOG: Preparing A2 Event Measurement Configuration!\n");
+    NR_ReportConfigToAddMod_t *rc_A2 = prepare_a2_event_report(measurementConfiguration->a2_event);
+    asn1cSeqAdd(&mc->reportConfigToAddModList->list, rc_A2);
+  }
+
+  for (uint8_t nCell = 0; nCell < MAX_NUMBER_OF_NEIGHBOUR_GNBS; nCell++) {
+    const NR_A3_EVENT_t *const a3Event = measurementConfiguration->a3_event_list[nCell];
+    if (!a3Event)
+      continue;
+
+    NR_ReportConfigToAddMod_t *rc_A3 = prepare_a3_event_report(a3Event);
+    asn1cSeqAdd(&mc->reportConfigToAddModList->list, rc_A3);
+  }
+
+  // Single Measurement Object since we support only intra frequency handover now.
+  NR_MeasObjectToAddMod_t *mo1 = calloc(1, sizeof(*mo1));
+  mo1->measObjectId = 1;
+  mo1->measObject.present = NR_MeasObjectToAddMod__measObject_PR_measObjectNR;
+  NR_MeasObjectNR_t *monr1 = calloc(1, sizeof(*monr1));
+  asn1cCallocOne(monr1->ssbFrequency, ssb_arfcn);
+  asn1cCallocOne(monr1->ssbSubcarrierSpacing, scs);
+  monr1->referenceSignalConfig.ssb_ConfigMobility = calloc(1, sizeof(*monr1->referenceSignalConfig.ssb_ConfigMobility));
+  monr1->referenceSignalConfig.ssb_ConfigMobility->deriveSSB_IndexFromCell = true;
+  monr1->absThreshSS_BlocksConsolidation = calloc(1, sizeof(*monr1->absThreshSS_BlocksConsolidation));
+  asn1cCallocOne(monr1->absThreshSS_BlocksConsolidation->thresholdRSRP, 36);
+  asn1cCallocOne(monr1->nrofSS_BlocksToAverage, 8);
+  monr1->smtc1 = calloc(1, sizeof(*monr1->smtc1));
+  monr1->smtc1->periodicityAndOffset.present = NR_SSB_MTC__periodicityAndOffset_PR_sf20;
+  monr1->smtc1->periodicityAndOffset.choice.sf20 = 2;
+  monr1->smtc1->duration = NR_SSB_MTC__duration_sf2;
+  monr1->quantityConfigIndex = 1;
+  monr1->ext1 = calloc(1, sizeof(*monr1->ext1));
+  asn1cCallocOne(monr1->ext1->freqBandIndicatorNR, band);
+
+  for (uint8_t nCell = 0; nCell < MAX_NUMBER_OF_NEIGHBOUR_GNBS; nCell++) {
+    const nr_neighbour_gnb_configuration_t *const neighbourCell = neighbourConfiguration[nCell];
+    if (!neighbourCell || !neighbourCell->isIntraFrequencyNeighbour)
+      continue;
+
+    LOG_D(NR_RRC, "HO LOG: Preparing Meas Config for neighbour Cell with the ID: %d\n", neighbourCell->physicalCellId);
+    if (monr1->cellsToAddModList == NULL) {
+      monr1->cellsToAddModList = calloc(1, sizeof(*monr1->cellsToAddModList));
+    }
+
+    NR_CellsToAddMod_t *cell = calloc(1, sizeof(*cell));
+    cell->physCellId = neighbourCell->physicalCellId;
+    ASN_SEQUENCE_ADD(&monr1->cellsToAddModList->list, cell);
+  }
+
+  mo1->measObject.choice.measObjectNR = monr1;
+  asn1cSeqAdd(&mc->measObjectToAddModList->list, mo1);
+
+  // Preparation of measId
+  for (uint8_t reportIdx = 0; reportIdx < mc->reportConfigToAddModList->list.count; reportIdx++) {
+    const NR_ReportConfigId_t reportId = mc->reportConfigToAddModList->list.array[reportIdx]->reportConfigId;
+    NR_MeasIdToAddMod_t *measid = calloc(1, sizeof(NR_MeasIdToAddMod_t));
+    measid->measId = reportIdx + 1;
+    measid->reportConfigId = reportId;
+    measid->measObjectId = 1;
+    asn1cSeqAdd(&mc->measIdToAddModList->list, measid);
+  }
+
+  mc->quantityConfig = calloc(1, sizeof(*mc->quantityConfig));
+  mc->quantityConfig->quantityConfigNR_List = calloc(1, sizeof(*mc->quantityConfig->quantityConfigNR_List));
+  NR_QuantityConfigNR_t *qcnr = calloc(1, sizeof(*qcnr));
+  asn1cCallocOne(qcnr->quantityConfigCell.ssb_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
+  asn1cCallocOne(qcnr->quantityConfigCell.csi_RS_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
+  asn1cSeqAdd(&mc->quantityConfig->quantityConfigNR_List->list, qcnr);
+
+  return mc;
+}
+
+void free_MeasConfig(NR_MeasConfig_t *mc)
+{
+  ASN_STRUCT_FREE(asn_DEF_NR_MeasConfig, mc);
+}
 
 void free_defaultMeasConfig(NR_MeasConfig_t *mc)
 {

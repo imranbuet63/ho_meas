@@ -460,7 +460,7 @@ typedef struct gNB_RRC_INST_s {
   cucp_cuup_if_t cucp_cuup;
 
   nr_rrc_du_container_t *du;
-  nr_neighbour_gnb_configuration_t neighbourConfiguration[MAX_NUMBER_OF_NEIGHBOUR_GNBS];
+  nr_neighbour_gnb_configuration_t *neighbourConfiguration[MAX_NUMBER_OF_NEIGHBOUR_GNBS];
   nr_measurement_configuration_t measurementConfiguration;
   uint8_t number_of_neighbours;
 

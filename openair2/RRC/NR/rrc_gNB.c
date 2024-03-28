@@ -572,7 +572,7 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   int band = get_dl_band(cell_info);
   uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
   //NR_MeasConfig_t *measconfig = get_defaultMeasConfig(ssb_arfcn, band, scs, ctxt_pP->module_id  );
-  measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
+  /NR_MeasConfig_t *measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
   // ue_p->measConfig = measconfig;
   if (measconfig != NULL) {
     free_MeasConfig(ue_p->measConfig);

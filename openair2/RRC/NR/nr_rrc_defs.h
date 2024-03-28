@@ -356,27 +356,39 @@ typedef struct {
 } nr_security_configuration_t;
 
 typedef struct {
-  uint32_t neighbour_gNB_ID;
-  uint64_t neighbour_nrcell_id;
+  long maxReportCells;
+  bool includeBeamMeasurements;
+} NR_PER_EVENT_t;
+
+typedef struct {
+  long threshold_RSRP;
+  long timeToTrigger;
+} NR_A2_EVENT_t;
+
+typedef struct {
+  int cell_id;
+  long a3_offset;
+  long hysteresis;
+  long timeToTrigger;
+} NR_A3_EVENT_t;
+
+typedef struct {
+  NR_PER_EVENT_t *per_event;
+  NR_A2_EVENT_t *a2_event;
+  NR_A3_EVENT_t *a3_event_list[MAX_NUMBER_OF_NEIGHBOUR_GNBS];
+} nr_measurement_configuration_t;
+
+typedef struct {
+  uint32_t gNB_ID;
+  uint64_t nrcell_id;
   int physicalCellId;
   int absoluteFrequencySSB;
   int subcarrierSpacing;
-  uint16_t neighbour_mcc;
-  uint16_t neighbour_mnc;
-  uint8_t neighbour_mnc_digit_length;
-  uint32_t neighbour_tac;
-  bool intraFrequencyNeighbour;
+  plmn_identity_t plmn;
+  uint32_t tac;
+  bool isIntraFrequencyNeighbour;
 } nr_neighbour_gnb_configuration_t;
 
-typedef struct {
-  int enableA2;
-  int enableA3;
-  int a2_threshold;
-  int a2_time_to_trigger;
-  int a3_offset;
-  int a3_hysteresis;
-  int a3_time_to_trigger;
-} nr_measurement_event_configuration_t;
 
 typedef struct nr_mac_rrc_dl_if_s {
   f1_setup_response_func_t f1_setup_response;
@@ -449,7 +461,7 @@ typedef struct gNB_RRC_INST_s {
 
   nr_rrc_du_container_t *du;
   nr_neighbour_gnb_configuration_t neighbourConfiguration[MAX_NUMBER_OF_NEIGHBOUR_GNBS];
-  nr_measurement_event_configuration_t measurementConfiguration;
+  nr_measurement_configuration_t measurementConfiguration;
   uint8_t number_of_neighbours;
 
 } gNB_RRC_INST;

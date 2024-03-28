@@ -216,6 +216,74 @@ typedef enum {
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------------------------------------------------*/		  
+/* Neighbour Cell Configurations*/
+#define GNB_CONFIG_STRING_NEIGHBOUR_CELL_LIST                   "neighbour_cell_configuration"
+
+
+#define GNB_CONFIG_STRING_NEIGHBOUR_GNB_ID                      "neighbour_gNB_ID"
+#define GNB_CONFIG_STRING_NEIGHBOUR_NR_CELLID                   "neighbour_nr_cellid"    
+#define GNB_CONFIG_STRING_NEIGHBOUR_CELL_PHYSICAL_ID            "neighbour_physical_cellId"
+#define GNB_CONFIG_STRING_NEIGHBOUR_CELL_ABS_FREQ_SSB           "neighbour_absoluteFrequencySSB"
+#define GNB_CONFIG_STRING_NEIGHBOUR_CELL_SCS                    "neighbour_subcarrierSpacing"
+#define GNB_CONFIG_STRING_NEIGHBOUR_MOBILE_COUNTRY_CODE         "neighbour_mcc"
+#define GNB_CONFIG_STRING_NEIGHBOUR_MOBILE_NETWORK_CODE         "neighbour_mnc"
+#define GNB_CONFIG_STRING_NEIGHBOUR_MNC_DIGIT_LENGTH            "neighbour_mnc_length"
+#define GNB_CONFIG_STRING_NEIGHBOUR_TRACKING_ARE_CODE           "neighbour_tracking_area_code"
+
+
+
+#define GNB_CONFIG_N_CELL_GNB_ID_IDX                         0
+#define GNB_CONFIG_N_CELL_NR_CELLID_IDX                      1
+#define GNB_CONFIG_N_CELL_PHYSICAL_ID_IDX                    2
+#define GNB_CONFIG_N_CELL_ABS_FREQ_SSB_IDX                   3
+#define GNB_CONFIG_N_CELL_SCS_IDX                            4
+#define GNB_CONFIG_N_CELL_MCC_IDX                            5
+#define GNB_CONFIG_N_CELL_MNC_IDX                            6
+#define GNB_CONFIG_N_CELL_MNC_DIGIT_LENGTH_IDX               7
+#define GNB_CONFIG_N_CELL_TAC_IDX                            8
+
+#define GNBNEIGHBOURCELLPARAMS_DESC {                                                                  \
+/*   optname                                                  helpstr                       paramflags  XXXptr     def val          type    numelt */ \
+  {GNB_CONFIG_STRING_GNB_ID,                                NULL,                                    0,           .uptr=NULL,   .defintval=0,                 TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NRCELLID,                              NULL,                                    0,           .u64ptr=NULL, .defint64val=1,               TYPE_UINT64,    0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_PHYSICAL_ID,            "neighbour cell physical id",            0,           .uptr=NULL,   .defuintval=1000,             TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_ABS_FREQ_SSB,           "neighbour cell abs freq ssb",           0,           .i64ptr=NULL, .defint64val=621312,          TYPE_INT64,     0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_SCS,                    "neighbour cell scs",                    0,           .uptr=NULL,   .defuintval=1,                TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_MOBILE_COUNTRY_CODE,         "mobile country code",                   0,           .uptr=NULL,   .defuintval=1000,             TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_MOBILE_NETWORK_CODE,         "mobile network code",                   0,           .uptr=NULL,   .defuintval=1000,             TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_MNC_DIGIT_LENGTH,            "length of the MNC (2 or 3)",            0,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_TRACKING_ARE_CODE,           NULL,                                    0,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},  \
+}
+/* Measurement Event Configurations*/
+#define GNB_CONFIG_STRING_MEASUREMENT_EVENTS              "nr_measurement_event_configuration"
+
+#define MEASUREMENT_EVENTS_ENABLE_A2                      "enableA2"
+#define MEASUREMENT_EVENTS_ENABLE_A3                      "enableA3"
+#define MEASUREMENT_EVENTS_ENABLE_A2_THRESHOLD            "thresholdA2"
+#define MEASUREMENT_EVENTS_ENABLE_A2_TIME_TO_TRIGGER      "A2_timeToTrigger"
+#define MEASUREMENT_EVENTS_ENABLE_A3_OFFSET               "A3_offset"
+#define MEASUREMENT_EVENTS_ENABLE_A3_HYSTERESIS           "A3_hysteresis"
+#define MEASUREMENT_EVENTS_ENABLE_A3_TIME_TO_TRIGGER      "A3_timeToTrigger"
+#define MEASUREMENT_EVENTS_GLOBALPARAMS_DESC { \
+    {MEASUREMENT_EVENTS_ENABLE_A2,                     "enabling a2 event",                       0,               .iptr=NULL,         .defintval=0,       TYPE_INT,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A3,                     "enabling a3 event",                       0,               .iptr=NULL,         .defintval=0,       TYPE_INT,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A2_THRESHOLD,           "a2 threshold",                            0,               .i64ptr=NULL,         .defint64val=30,      TYPE_INT64,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A2_TIME_TO_TRIGGER,     "a2 time to trigger",                      0,               .i64ptr=NULL,         .defint64val=1,       TYPE_INT64,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A3_OFFSET,              "a3 offset",                               0,               .i64ptr=NULL,         .defint64val=10,      TYPE_INT64,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A3_HYSTERESIS,          "a3 hysteresis",                           0,               .i64ptr=NULL,         .defint64val=0,       TYPE_INT64,  0},    \
+    {MEASUREMENT_EVENTS_ENABLE_A3_TIME_TO_TRIGGER,     "a3 time to trigger",                      0,               .i64ptr=NULL,         .defint64val=1,       TYPE_INT64,  0},    \
+}
+
+#define MEASUREMENT_EVENTS_ENABLE_A2_IDX                    0
+#define MEASUREMENT_EVENTS_ENABLE_A3_IDX                    1
+#define MEASUREMENT_EVENTS_ENABLE_A2_THRESHOLD_IDX          2
+#define MEASUREMENT_EVENTS_ENABLE_A2_TIME_TO_TRIGGER_IDX    3
+#define MEASUREMENT_EVENTS_ENABLE_A3_OFFSET_IDX             4
+#define MEASUREMENT_EVENTS_ENABLE_A3_HYSTERESIS_IDX         5
+#define MEASUREMENT_EVENTS_ENABLE_A3_TIME_TO_TRIGGER_IDX    6
+
+
+
 
 /* PLMN ID configuration */
 

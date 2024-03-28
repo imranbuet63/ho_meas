@@ -1568,6 +1568,45 @@ void RCconfig_NRRRC(gNB_RRC_INST *rrc)
 	
         char gnbpath[MAX_OPTNAME_SIZE + 8];
         sprintf(gnbpath,"%s.[%i]",GNB_CONFIG_STRING_GNB_LIST,k);
+        
+        paramdef_t NeighbourCellParams[] = GNBNEIGHBOURCELLPARAMS_DESC;
+        paramlist_def_t NeighbourCellParamList = {GNB_CONFIG_STRING_NEIGHBOUR_CELL_LIST, NULL, 0};
+
+        config_getlist(&NeighbourCellParamList, NeighbourCellParams, sizeofArray(NeighbourCellParams), gnbpath);
+        LOG_I(NR_MAC, "HO LOG: Neighbour Cell ELM NUM: %d\n", NeighbourCellParamList.numelt);
+
+        for (uint8_t l = 0; l < NeighbourCellParamList.numelt; ++l) {
+          rrc->neighbourConfiguration[l].neighbour_gNB_ID                 = *(NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_GNB_ID_IDX].uptr);
+          rrc->neighbourConfiguration[l].neighbour_nrcell_id              = (uint64_t) *(NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_NR_CELLID_IDX].u64ptr);
+          rrc->neighbourConfiguration[l].physicalCellId                   = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_PHYSICAL_ID_IDX].uptr;
+          rrc->neighbourConfiguration[l].subcarrierSpacing                = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_SCS_IDX].uptr;
+          rrc->neighbourConfiguration[l].absoluteFrequencySSB             = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_ABS_FREQ_SSB_IDX].i64ptr;
+          rrc->neighbourConfiguration[l].neighbour_mcc                    = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_MCC_IDX].uptr;
+          rrc->neighbourConfiguration[l].neighbour_mnc                    = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_MNC_IDX].uptr;
+          rrc->neighbourConfiguration[l].neighbour_mnc_digit_length       = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_MNC_DIGIT_LENGTH_IDX].uptr;
+          rrc->neighbourConfiguration[l].neighbour_tac                    = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_TAC_IDX].uptr;
+        }
+
+        rrc->number_of_neighbours = NeighbourCellParamList.numelt;
+
+        if (rrc->number_of_neighbours > 0) {
+          paramdef_t MeasurementEventParams[] = MEASUREMENT_EVENTS_GLOBALPARAMS_DESC;
+          paramlist_def_t MeasurementEventParamList = {GNB_CONFIG_STRING_MEASUREMENT_EVENTS, NULL, 0};
+          config_getlist(&MeasurementEventParamList, MeasurementEventParams, sizeofArray(MeasurementEventParams), gnbpath);
+
+          rrc->measurementConfiguration.enableA2 = (*MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A2_IDX].i64ptr);
+          if (rrc->measurementConfiguration.enableA2) {
+            rrc->measurementConfiguration.a2_threshold = *MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A2_THRESHOLD_IDX].i64ptr;
+            rrc->measurementConfiguration.a2_time_to_trigger = *MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A2_TIME_TO_TRIGGER_IDX].i64ptr;
+          }
+
+          rrc->measurementConfiguration.enableA3 = (*MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A3_IDX].i64ptr);
+          if (rrc->measurementConfiguration.enableA3) {
+            rrc->measurementConfiguration.a3_offset = *MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A3_OFFSET_IDX].i64ptr;
+            rrc->measurementConfiguration.a3_hysteresis = *MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A3_HYSTERESIS_IDX].i64ptr;
+            rrc->measurementConfiguration.a3_time_to_trigger = *MeasurementEventParamList.paramarray[0][MEASUREMENT_EVENTS_ENABLE_A3_TIME_TO_TRIGGER_IDX].i64ptr;
+          }
+        }
 
 	
         paramdef_t PLMNParams[] = GNBPLMNPARAMS_DESC;

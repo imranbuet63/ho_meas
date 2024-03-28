@@ -409,7 +409,8 @@ typedef struct NRRrcConfigurationReq_s {
   uint16_t                mnc[PLMN_LIST_MAX_SIZE];
   uint8_t                 mnc_digit_length[PLMN_LIST_MAX_SIZE];
   uint8_t                 num_plmn;
-
+   NR_ServingCellConfigCommon_t *serving_cell_config_common;
+  NR_ServingCellConfig_t  *serving_cell_config;
   bool                    enable_sdap;
   int                     drbs;
 } gNB_RrcConfigurationReq;

@@ -143,7 +143,7 @@
 #include "common/ran_context.h"
 #include "conversions.h"
 
-//#define XER_PRINT
+#define XER_PRINT
 
 typedef struct xer_sprint_string_s {
   char *string;
@@ -1125,11 +1125,13 @@ int do_RRCReestablishmentComplete(uint8_t *buffer, size_t buffer_size, int64_t r
   return((enc_rval.encoded+7)/8);
 }
 
-NR_MeasConfig_t *get_defaultMeasConfig(uint32_t ssb_arfcn, int band, int scs)
+NR_MeasConfig_t *get_defaultMeasConfig(uint32_t ssb_arfcn, int band, int scs, const module_id_t module_id)
 {
   NR_MeasConfig_t *mc = calloc(1, sizeof(*mc));
   mc->measObjectToAddModList = calloc(1, sizeof(*mc->measObjectToAddModList));
   mc->reportConfigToAddModList = calloc(1, sizeof(*mc->reportConfigToAddModList));
+  mc->measIdToAddModList = calloc(1, sizeof(*mc->measIdToAddModList));
+  mc->quantityConfig = calloc(1, sizeof(*mc->quantityConfig));
 
   // Measurement Objects: Specifies what is to be measured. For NR and inter-RAT E-UTRA measurements, this may include
   // cell-specific offsets, blacklisted cells to be ignored and whitelisted cells to consider for measurements.
@@ -1154,6 +1156,31 @@ NR_MeasConfig_t *get_defaultMeasConfig(uint32_t ssb_arfcn, int band, int scs)
   mo1->measObject.choice.measObjectNR = monr1;
   asn1cSeqAdd(&mc->measObjectToAddModList->list, mo1);
   
+
+   //imran
+  NR_MeasObjectToAddMod_t *mo3 = calloc(1, sizeof(*mo3));
+  mo3->measObjectId = 3;
+  mo3->measObject.present = NR_MeasObjectToAddMod__measObject_PR_measObjectNR;
+  NR_MeasObjectNR_t *monr3 = calloc(1, sizeof(*monr3));
+  asn1cCallocOne(monr3->ssbFrequency, ssb_arfcn);
+  asn1cCallocOne(monr3->ssbSubcarrierSpacing, scs);
+  for (int i = 0; i < RC.nb_nr_inst; i++) {
+    if ((i != module_id) && RC.nrrrc[i] && RC.nrrrc[i]->configuration.serving_cell_config_common && RC.nrrrc[i]->configuration.serving_cell_config_common->physCellId) {
+        if (monr3->cellsToAddModList == NULL) {
+          monr3->cellsToAddModList = calloc(1, sizeof(*monr3->cellsToAddModList));
+        }
+        NR_CellsToAddMod_t *cell = calloc(1, sizeof(*cell));
+        cell->physCellId = *RC.nrrrc[i]->configuration.serving_cell_config_common->physCellId;
+        ASN_SEQUENCE_ADD(&monr3->cellsToAddModList->list, cell);
+    }
+  }
+  monr3->quantityConfigIndex = 2;
+  monr3->ext1 = calloc(1, sizeof(*monr3->ext1));
+  asn1cCallocOne(monr3->ext1->freqBandIndicatorNR, band);
+  mo3->measObject.choice.measObjectNR = monr3;
+  asn1cSeqAdd(&mc->measObjectToAddModList->list, mo3);
+  //imran
+
   // Reporting Configuration: Specifies how reporting should be done. This could be periodic or event-triggered.
   NR_ReportConfigToAddMod_t *rc = calloc(1, sizeof(*rc));
   rc->reportConfigId = 1;
@@ -1182,27 +1209,72 @@ NR_MeasConfig_t *get_defaultMeasConfig(uint32_t ssb_arfcn, int band, int scs)
   rc->reportConfig.choice.reportConfigNR = rcnr;
   asn1cSeqAdd(&mc->reportConfigToAddModList->list, rc);
 
+  /*Imran*/ /*Requires Verification*/
+
+  /*Event A3*/
+  NR_ReportConfigToAddMod_t *rc_event_A3 = calloc(1, sizeof(*rc_event_A3));
+  rc_event_A3->reportConfigId = 3;
+  rc_event_A3->reportConfig.present = NR_ReportConfigToAddMod__reportConfig_PR_reportConfigNR;
+  NR_EventTriggerConfig_t *etrc_event_A3 = calloc(1, sizeof(*etrc_event_A3));
+  etrc_event_A3->eventId.present = NR_EventTriggerConfig__eventId_PR_eventA3;
+  etrc_event_A3->eventId.choice.eventA3 = calloc(1, sizeof(*etrc_event_A3->eventId.choice.eventA3));
+  etrc_event_A3->eventId.choice.eventA3->a3_Offset.present = NR_MeasTriggerQuantityOffset_PR_rsrp;
+  etrc_event_A3->eventId.choice.eventA3->a3_Offset.choice.rsrp = 0; // 
+  etrc_event_A3->eventId.choice.eventA3->reportOnLeave = true;
+  etrc_event_A3->eventId.choice.eventA3->hysteresis = 0;
+  etrc_event_A3->eventId.choice.eventA3->timeToTrigger = NR_TimeToTrigger_ms2560;
+  etrc_event_A3->rsType = NR_NR_RS_Type_ssb;
+  etrc_event_A3->reportInterval = NR_ReportInterval_ms1024;
+  etrc_event_A3->reportAmount = NR_EventTriggerConfig__reportAmount_infinity;
+  etrc_event_A3->reportQuantityCell.rsrp = true;
+  etrc_event_A3->reportQuantityCell.rsrq = false;
+  etrc_event_A3->reportQuantityCell.sinr = false;
+  asn1cCallocOne(etrc_event_A3->maxNrofRS_IndexesToReport, 4);
+  etrc_event_A3->maxReportCells = 4;
+  etrc_event_A3->includeBeamMeasurements = false;
+  NR_ReportConfigNR_t *rcnr_event_A3 = calloc(1, sizeof(*rcnr_event_A3));
+  rcnr_event_A3->reportType.present = NR_ReportConfigNR__reportType_PR_eventTriggered;
+  rcnr_event_A3->reportType.choice.eventTriggered = etrc_event_A3;
+  rc_event_A3->reportConfig.choice.reportConfigNR = rcnr_event_A3;
+  asn1cSeqAdd(&mc->reportConfigToAddModList->list, rc_event_A3);
+  
+  /*iImran*/
+  
+
   // Measurement ID: Identifies how to report measurements of a specific object. This is a many-to-many mapping: a
   // measurement object could have multiple reporting configurations, a reporting configuration could apply to multiple
   // objects. A unique ID is used for each object-to-report-config association. When UE sends a MeasurementReport
   // message, a single ID and related measurements are included in the message.
-  mc->measIdToAddModList = calloc(1, sizeof(*mc->measIdToAddModList));
+  //mc->measIdToAddModList = calloc(1, sizeof(*mc->measIdToAddModList));
   NR_MeasIdToAddMod_t *measid = calloc(1, sizeof(*measid));
   measid->measId = 1;
   measid->measObjectId = 1;
   measid->reportConfigId = 1;
   asn1cSeqAdd(&mc->measIdToAddModList->list, measid);
 
+  /*imran*/
+  NR_MeasIdToAddMod_t *measid_event_A3 = calloc(1, sizeof(*measid_event_A3));
+  measid_event_A3->measId = 3;
+  measid_event_A3->measObjectId = 3;
+  measid_event_A3->reportConfigId = 3;
+  asn1cSeqAdd(&mc->measIdToAddModList->list, measid_event_A3);
+  /*imran*/
+  
   // Quantity Configuration: Specifies parameters for layer 3 filtering of measurements. Only after filtering, reporting
   // criteria are evaluated. The formula used is F_n = (1-a)F_(n-1) + a*M_n, where M is the latest measurement, F is the
   // filtered measurement, and ais based on configured filter coefficient.
-  mc->quantityConfig = calloc(1, sizeof(*mc->quantityConfig));
+  //mc->quantityConfig = calloc(1, sizeof(*mc->quantityConfig));
   mc->quantityConfig->quantityConfigNR_List = calloc(1, sizeof(*mc->quantityConfig->quantityConfigNR_List));
   NR_QuantityConfigNR_t *qcnr3 = calloc(1, sizeof(*qcnr3));
   asn1cCallocOne(qcnr3->quantityConfigCell.ssb_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
   asn1cCallocOne(qcnr3->quantityConfigCell.csi_RS_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
   asn1cSeqAdd(&mc->quantityConfig->quantityConfigNR_List->list, qcnr3);
 
+  /*Imran*/
+  NR_QuantityConfigNR_t *qcnr_event_a3 = calloc(1, sizeof(*qcnr_event_a3));
+  asn1cCallocOne(qcnr_event_a3->quantityConfigCell.ssb_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
+  asn1cCallocOne(qcnr_event_a3->quantityConfigCell.csi_RS_FilterConfig.filterCoefficientRSRP, NR_FilterCoefficient_fc6);
+  asn1cSeqAdd(&mc->quantityConfig->quantityConfigNR_List->list, qcnr_event_a3);
   return mc;
 }
 

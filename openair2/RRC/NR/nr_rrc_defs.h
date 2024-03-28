@@ -96,6 +96,8 @@
 #define NR_UE_MODULE_INVALID ((module_id_t) ~0) // FIXME attention! depends on type uint8_t!!!
 #define NR_UE_INDEX_INVALID  ((module_id_t) ~0) // FIXME attention! depends on type uint8_t!!! used to be -1
 
+#define MAX_NUMBER_OF_NEIGHBOUR_GNBS 6
+
 typedef enum {
   NR_RRC_OK=0,
   NR_RRC_ConnSetup_failed,
@@ -353,6 +355,29 @@ typedef struct {
   int do_drb_integrity;
 } nr_security_configuration_t;
 
+typedef struct {
+  uint32_t neighbour_gNB_ID;
+  uint64_t neighbour_nrcell_id;
+  int physicalCellId;
+  int absoluteFrequencySSB;
+  int subcarrierSpacing;
+  uint16_t neighbour_mcc;
+  uint16_t neighbour_mnc;
+  uint8_t neighbour_mnc_digit_length;
+  uint32_t neighbour_tac;
+  bool intraFrequencyNeighbour;
+} nr_neighbour_gnb_configuration_t;
+
+typedef struct {
+  int enableA2;
+  int enableA3;
+  int a2_threshold;
+  int a2_time_to_trigger;
+  int a3_offset;
+  int a3_hysteresis;
+  int a3_time_to_trigger;
+} nr_measurement_event_configuration_t;
+
 typedef struct nr_mac_rrc_dl_if_s {
   f1_setup_response_func_t f1_setup_response;
   f1_setup_failure_func_t f1_setup_failure;
@@ -423,6 +448,9 @@ typedef struct gNB_RRC_INST_s {
   cucp_cuup_if_t cucp_cuup;
 
   nr_rrc_du_container_t *du;
+  nr_neighbour_gnb_configuration_t neighbourConfiguration[MAX_NUMBER_OF_NEIGHBOUR_GNBS];
+  nr_measurement_event_configuration_t measurementConfiguration;
+  uint8_t number_of_neighbours;
 
 } gNB_RRC_INST;
 

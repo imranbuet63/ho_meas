@@ -272,11 +272,13 @@ int config_get(paramdef_t *params, int numparams, char *prefix) {
   configmodule_interface_t *cfgif = config_get_if();
   if (cfgif != NULL) {
     ret = config_get_if()->get(params, numparams, prefix);
-
+    //ret = cfgif->get(cfgif, params, numparams, prefix);
     if (ret >= 0) {
       config_process_cmdline(params, numparams, prefix);
-      if (cfgif->rtflags & CONFIG_SAVERUNCFG) {
+      if (config_get_if()->rtflags & CONFIG_SAVERUNCFG) {
         config_get_if()->set(params, numparams, prefix);
+        //cfgif->set(params, numparams, prefix);
+      
       }
       config_execcheck(params, numparams, prefix);
     }
@@ -292,8 +294,9 @@ int config_getlist(paramlist_def_t *ParamList, paramdef_t *params, int numparams
     fprintf(stderr,"[CONFIG] config_get skipped, config module not properly initialized\n");
     return -1;
   }
+  //const int ret = cfg->getlist(cfg, ParamList, params, numparams, prefix);
 
-  if (!config_get_if())
+  if(!config_get_if())
     return -1;
 
   const int ret = config_get_if()->getlist(ParamList, params, numparams, prefix);
@@ -317,6 +320,7 @@ int config_getlist(paramlist_def_t *ParamList, paramdef_t *params, int numparams
       config_process_cmdline(ParamList->paramarray[i],numparams,cfgpath);
       if (config_get_if()->rtflags & CONFIG_SAVERUNCFG) {
         config_get_if()->set(ParamList->paramarray[i], numparams, cfgpath);
+        //cfg->set(ParamList->paramarray[i], numparams, cfgpath);
       }
       config_execcheck(ParamList->paramarray[i], numparams, cfgpath);
     }

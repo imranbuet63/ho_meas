@@ -1485,7 +1485,7 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
   paramdef_t NeighbourCellParams[] = GNBNEIGHBOURCELLPARAMS_DESC;
   paramlist_def_t NeighbourCellParamList = {GNB_CONFIG_STRING_NEIGHBOUR_CELL_LIST, NULL, 0};
 
-  config_getlist(config_get_if(), &NeighbourCellParamList, NeighbourCellParams, sizeofArray(NeighbourCellParams), gnbpath);
+  config_getlist(&NeighbourCellParamList, NeighbourCellParams, sizeofArray(NeighbourCellParams), gnbpath);
   LOG_D(GNB_APP, "HO LOG: Neighbour Cell ELM NUM: %d\n", NeighbourCellParamList.numelt);
 
   if (NeighbourCellParamList.numelt < 1)
@@ -1510,7 +1510,7 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
             GNB_CONFIG_STRING_NEIGHBOUR_PLMN);
 
     paramdef_t NeighbourPlmn[] = GNBPLMNPARAMS_DESC;
-    config_get(config_get_if(), NeighbourPlmn, sizeofArray(NeighbourPlmn), neighbour_plmn_path);
+    config_get(NeighbourPlmn, sizeofArray(NeighbourPlmn), neighbour_plmn_path);
 
     neighbourCell->plmn.mcc = *NeighbourPlmn[GNB_MOBILE_COUNTRY_CODE_IDX].uptr;
     neighbourCell->plmn.mnc = *NeighbourPlmn[GNB_MOBILE_NETWORK_CODE_IDX].uptr;
@@ -1528,7 +1528,7 @@ static void fill_measurement_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
   // A3 Event Configuration
   paramlist_def_t A3_EventList = {MEASUREMENT_EVENTS_A3, NULL, 0};
   paramdef_t A3_EventParams[] = MEASUREMENT_A3_GLOBALPARAMS_DESC;
-  config_getlist(config_get_if(), &A3_EventList, A3_EventParams, sizeofArray(A3_EventParams), measurement_path);
+  config_getlist(&A3_EventList, A3_EventParams, sizeofArray(A3_EventParams), measurement_path);
   LOG_D(GNB_APP, "HO LOG: A3 Configuration Exists: %d\n", A3_EventList.numelt);
 
   nr_measurement_configuration_t *measurementConfig = &rrc->measurementConfiguration;
@@ -1552,7 +1552,7 @@ static void fill_measurement_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
           GNB_CONFIG_STRING_MEASUREMENT_CONFIGURATION,
           MEASUREMENT_EVENTS_A2);
   paramdef_t A2_EventParams[] = MEASUREMENT_A2_GLOBALPARAMS_DESC;
-  config_get(config_get_if(), A2_EventParams, sizeofArray(A2_EventParams), a2_path);
+  config_get(A2_EventParams, sizeofArray(A2_EventParams), a2_path);
   if (*A2_EventParams[MEASUREMENT_EVENTS_ENABLE_IDX].i64ptr) {
     NR_A2_EVENT_t *a2_event = (NR_A2_EVENT_t *)calloc(1, sizeof(NR_A2_EVENT_t));
     a2_event->threshold_RSRP = *A2_EventParams[MEASUREMENT_EVENTS_A2_THRESHOLD_IDX].i64ptr;
@@ -1675,7 +1675,7 @@ void RCconfig_NRRRC(gNB_RRC_INST *rrc)
         fill_neighbour_cell_configuration(k, rrc);
 
         fill_measurement_configuration(k, rrc);
-        
+
         paramdef_t PLMNParams[] = GNBPLMNPARAMS_DESC;
 
         paramlist_def_t PLMNParamList = {GNB_CONFIG_STRING_PLMN_LIST, NULL, 0};

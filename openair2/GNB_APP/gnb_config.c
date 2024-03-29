@@ -1570,7 +1570,7 @@ static void fill_measurement_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
           GNB_CONFIG_STRING_MEASUREMENT_CONFIGURATION,
           MEASUREMENT_EVENTS_PERIODICAL);
   paramdef_t Periodical_EventParams[] = MEASUREMENT_PERIODICAL_GLOBALPARAMS_DESC;
-  config_get(config_get_if(), Periodical_EventParams, sizeofArray(Periodical_EventParams), periodic_event_path);
+  config_get(Periodical_EventParams, sizeofArray(Periodical_EventParams), periodic_event_path);
   if (*Periodical_EventParams[MEASUREMENT_EVENTS_ENABLE_IDX].i64ptr) {
     NR_PER_EVENT_t *periodic_event = (NR_PER_EVENT_t *)calloc(1, sizeof(NR_PER_EVENT_t));
     periodic_event->includeBeamMeasurements = *Periodical_EventParams[MEASUREMENT_EVENTS_INCLUDE_BEAM_MEAS_IDX].i64ptr;

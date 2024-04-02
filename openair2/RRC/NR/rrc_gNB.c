@@ -576,7 +576,8 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   // ue_p->measConfig = measconfig;
   if (measconfig != NULL) {
     free_MeasConfig(ue_p->measConfig);
-    ue_p->measConfig = measconfig;
+    //ue_p->measConfig = measconfig;
+    clone_MeasConfig(measconfig, ue_context_pP);
     // clone_MeasConfig(measconfig, ue_context_pP);
   }
   NR_SRB_ToAddModList_t *SRBs = createSRBlist(ue_p, false);

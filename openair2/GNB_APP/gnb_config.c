@@ -1542,7 +1542,7 @@ static void fill_measurement_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
     a3_event->timeToTrigger = *A3_EventList.paramarray[i][MEASUREMENT_EVENTS_TIMETOTRIGGER_IDX].i64ptr;
     a3_event->a3_offset = *A3_EventList.paramarray[i][MEASUREMENT_EVENTS_OFFSET_IDX].i64ptr;
     a3_event->hysteresis = *A3_EventList.paramarray[i][MEASUREMENT_EVENTS_HYSTERESIS_IDX].i64ptr;
-
+    LOG_I(GNB_APP, "meas event Param Parsed IK a3_cell_ID:%d ac_offset_id: %d\n", a3_event->cell_id, a3_event->a3_offset);
     measurementConfig->a3_event_list[i] = a3_event;
   }
 

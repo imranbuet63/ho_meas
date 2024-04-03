@@ -1502,7 +1502,7 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
     neighbourCell->subcarrierSpacing = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_SCS_IDX].uptr;
     neighbourCell->absoluteFrequencySSB = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_ABS_FREQ_SSB_IDX].i64ptr;
     neighbourCell->tac = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_TAC_IDX].uptr;
-    LOG_I(GNB_APP, "Neighbour Cell Param Parsed IK %d\n", neighbourCell->gNB_ID);
+    LOG_I(GNB_APP, "Neighbour Cell Param Parsed IK gNB_ID:%d nrcell_id: %d physicalCellId: %d\n", neighbourCell->gNB_ID, neighbourCell->nrcell_id, neighbourCell->physicalCellId);
     char neighbour_plmn_path[CONFIG_MAXOPTLENGTH];
     sprintf(neighbour_plmn_path,
             "%s.%s.[%i].%s",

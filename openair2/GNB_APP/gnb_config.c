@@ -1479,6 +1479,7 @@ static void check_ssb_raster(uint64_t freq, int band, int scs)
 
 static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
 {
+  LOG_I(GNB_APP, "Neighbour Cell Config IK \n");
   char gnbpath[MAX_OPTNAME_SIZE + 8];
   sprintf(gnbpath, "%s.[%i]", GNB_CONFIG_STRING_GNB_LIST, gnb_idx);
 
@@ -1664,7 +1665,7 @@ void RCconfig_NRRRC(gNB_RRC_INST *rrc)
     }       
     
     // search if in active list
-    
+    LOG_I(GNB_APP, "gNB RRCConfigureReq IK \n");
     gNB_RrcConfigurationReq nrrrc_config = {0};
     for (k=0; k <num_gnbs ; k++) {
       if (strcmp(GNBSParams[GNB_ACTIVE_GNBS_IDX].strlistptr[k], *(GNBParamList.paramarray[i][GNB_GNB_NAME_IDX].strptr) )== 0) {

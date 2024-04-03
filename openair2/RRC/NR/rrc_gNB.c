@@ -1684,7 +1684,7 @@ static void process_Event_Based_Measurement_Report(NR_ReportConfigNR_t *report, 
 
 static void rrc_gNB_process_MeasurementReport(rrc_gNB_ue_context_t *ue_context, NR_MeasurementReport_t *measurementReport)
 {
-  LOG_D(NR_RRC, "Process Measurement Report\n");
+  LOG_D(NR_RRC, "Process Measurement Report Enter!!!\n");
   if (LOG_DEBUGFLAG(DEBUG_ASN1))
     xer_fprint(stdout, &asn_DEF_NR_MeasurementReport, (void *)measurementReport);
 
@@ -2780,7 +2780,7 @@ static void print_rrc_meas(FILE *f, const NR_MeasResults_t *measresults)
   //DevAssert(measresults->measResultServingMOList.list.count >= 1);
   bool ik_check = false;
 
-  if (measresults->measResultServingMOList.list.count > 1){
+  if (measresults->measResultServingMOList.list.count >= 1){
     LOG_W(RRC, "Received %d MeasResultServMO, but handling only 1!\n", measresults->measResultServingMOList.list.count);
     ik_check = true ;
   }  

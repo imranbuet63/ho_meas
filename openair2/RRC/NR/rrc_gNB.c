@@ -1608,6 +1608,43 @@ static void process_Event_Based_Measurement_Report(NR_ReportConfigNR_t *report, 
 
   int servingCellRSRP = 0;
   int neighbourCellRSRP = 0;
+  LOG_D(NR_RRC, "Process_Event_based_Measurement_Report Enter");
+
+  const NR_MeasResults_t *measResults = &measurementReport->criticalExtensions.choice.measurementReport->measResults;
+
+  for (int serving_cell_idx = 0; serving_cell_idx < measResults->measResultServingMOList.list.count; serving_cell_idx++) {
+  const NR_MeasResultServMO_t *meas_result_serv_MO = measResults->measResultServingMOList.list.array[serving_cell_idx];
+
+  if (meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell) {
+      servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell->rsrp) - 157;
+    } else {
+      servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;
+    }
+      LOG_D(NR_RRC, "IK! Serving Cell RSRP: %d\n", servingCellRSRP);
+  }
+
+  if (measResults->measResultNeighCells == NULL)
+        break;
+
+  if (measResults->measResultNeighCells->present != NR_MeasResults__measResultNeighCells_PR_measResultListNR)
+        break;
+
+  const NR_MeasResultListNR_t *measResultListNR = measResults->measResultNeighCells->choice.measResultListNR;
+  for (int neigh_meas_idx = 0; neigh_meas_idx < measResultListNR->list.count; neigh_meas_idx++) {
+    const NR_MeasResultNR_t *meas_result_neigh_cell = (measResultListNR->list.array[neigh_meas_idx]);
+    const int neighbourCellId = *(meas_result_neigh_cell->physCellId);
+
+    // Table 10.1.6.1-1: SS-RSRP and CSI-RSRP measurement report mapping
+    if (meas_result_neigh_cell->measResult.cellResults.resultsSSB_Cell) {
+      neighbourCellRSRP = *(meas_result_neigh_cell->measResult.cellResults.resultsSSB_Cell->rsrp) - 157;
+    } else {
+      neighbourCellRSRP = *(meas_result_neigh_cell->measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;
+    }
+
+  LOG_I(NR_RRC,
+              "IK HO LOG: Measurement Report has came for the neighbour: %d with RSRP: %d\n",
+              neighbourCellId,
+              neighbourCellRSRP);
 
   switch (event_triggered->eventId.present) {
     case NR_EventTriggerConfig__eventId_PR_eventA2:

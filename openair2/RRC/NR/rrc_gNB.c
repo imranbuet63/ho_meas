@@ -539,8 +539,7 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   uint8_t xid = rrc_gNB_get_next_transaction_identifier(ctxt_pP->module_id);
   ue_p->xids[xid] = RRC_DEFAULT_RECONF;
 
-  const nr_rrc_du_container_t *du = rrc->du;
-  DevAssert(du != NULL);
+
 
   struct NR_RRCReconfiguration_v1530_IEs__dedicatedNAS_MessageList *dedicatedNAS_MessageList = CALLOC(1, sizeof(*dedicatedNAS_MessageList));
 
@@ -566,6 +565,8 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
     dedicatedNAS_MessageList = NULL;
   }
 
+  const nr_rrc_du_container_t *du = rrc->du;
+  DevAssert(du != NULL);
   AssertFatal(du->setup_req->num_cells_available == 1, "cannot handle more than one cell, but have %d\n", du->setup_req->num_cells_available);
   f1ap_served_cell_info_t *cell_info = &du->setup_req->cell[0].info;
   int scs = get_ssb_scs(cell_info);
@@ -573,7 +574,8 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   //uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
   //NR_MeasConfig_t *measconfig = get_defaultMeasConfig(ssb_arfcn, band, scs, ctxt_pP->module_id  );
   //NR_MeasConfig_t *measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
-   NR_MeasConfig_t *measconfig = NULL;
+  NR_MeasConfig_t *measconfig = NULL;
+
   if (du->mib != NULL && du->sib1 != NULL) {
     /* we cannot calculate the default measurement config without MIB&SIB1, as
      * we don't know the DU's SSB ARFCN */
@@ -589,7 +591,7 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   }
   NR_SRB_ToAddModList_t *SRBs = createSRBlist(ue_p, false);
   NR_DRB_ToAddModList_t *DRBs = createDRBlist(ue_p, false);
- 
+  LOG_W(NR_RRC, "BEFORE_RRCReconfiguration!! \n");
   uint8_t buffer[RRC_BUF_SIZE] = {0};
   int size = do_RRCReconfiguration(ue_p,
                                    buffer,

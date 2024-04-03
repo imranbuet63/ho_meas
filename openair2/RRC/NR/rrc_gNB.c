@@ -570,9 +570,16 @@ static void rrc_gNB_generate_defaultRRCReconfiguration(const protocol_ctxt_t *co
   f1ap_served_cell_info_t *cell_info = &du->setup_req->cell[0].info;
   int scs = get_ssb_scs(cell_info);
   int band = get_dl_band(cell_info);
-  uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
+  //uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
   //NR_MeasConfig_t *measconfig = get_defaultMeasConfig(ssb_arfcn, band, scs, ctxt_pP->module_id  );
-  NR_MeasConfig_t *measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
+  //NR_MeasConfig_t *measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
+   NR_MeasConfig_t *measconfig = NULL;
+  if (du->mib != NULL && du->sib1 != NULL) {
+    /* we cannot calculate the default measurement config without MIB&SIB1, as
+     * we don't know the DU's SSB ARFCN */
+    uint32_t ssb_arfcn = get_ssb_arfcn(cell_info, du->mib, du->sib1);
+    measconfig = get_MeasConfig(ssb_arfcn, band, scs, &rrc->measurementConfiguration, rrc->neighbourConfiguration);
+  }
   // ue_p->measConfig = measconfig;
   if (measconfig != NULL) {
     free_MeasConfig(ue_p->measConfig);

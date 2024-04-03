@@ -1445,6 +1445,7 @@ static NR_ReportConfigToAddMod_t *prepare_a3_event_report(const NR_A3_EVENT_t *a
   rc_A3->reportConfig.choice.reportConfigNR = rcnr_A3;
   return rc_A3;
 }
+
 NR_MeasConfig_t *get_MeasConfig(uint32_t ssb_arfcn,
                                 int band,
                                 int scs,

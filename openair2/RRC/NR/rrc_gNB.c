@@ -2775,16 +2775,10 @@ static void rrc_CU_process_f1_lost_connection(gNB_RRC_INST *rrc, f1ap_lost_conne
 
 static void print_rrc_meas(FILE *f, const NR_MeasResults_t *measresults)
 {
-  LOG_I(RRC, "Received %d MeasResultServMO, but handling only 1!\n", measresults->measResultServingMOList.list.count);
-  //LOG_Wi(RRC, "Received %d MeasResultServMO, but handling only 1!\n", measresults->measResultServingMOList.list.count);
-  //DevAssert(measresults->measResultServingMOList.list.count >= 1);
-  bool ik_check = false;
-
-  if (measresults->measResultServingMOList.list.count >= 1){
+  DevAssert(measresults->measResultServingMOList.list.count >= 1);
+  if (measresults->measResultServingMOList.list.count > 1)
     LOG_W(RRC, "Received %d MeasResultServMO, but handling only 1!\n", measresults->measResultServingMOList.list.count);
-    ik_check = true ;
-  }  
-  if (ik_check){
+
   NR_MeasResultServMO_t *measresultservmo = measresults->measResultServingMOList.list.array[0];
   NR_MeasResultNR_t *measresultnr = &measresultservmo->measResultServingCell;
   NR_MeasQuantityResults_t *mqr = measresultnr->measResult.cellResults.resultsSSB_Cell;
@@ -2797,7 +2791,6 @@ static void print_rrc_meas(FILE *f, const NR_MeasResults_t *measresults)
     fprintf(f, "RSRP %ld dBm RSRQ %.1f dB SINR %.1f dB\n", rrsrp, rrsrq, rsinr);
   } else {
     fprintf(f, "NOT PROVIDED\n");
-  }
   }
 }
 

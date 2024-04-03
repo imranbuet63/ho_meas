@@ -1487,12 +1487,13 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
   paramlist_def_t NeighbourCellParamList = {GNB_CONFIG_STRING_NEIGHBOUR_CELL_LIST, NULL, 0};
 
   config_getlist(&NeighbourCellParamList, NeighbourCellParams, sizeofArray(NeighbourCellParams), gnbpath);
-  LOG_D(GNB_APP, "HO LOG: Neighbour Cell ELM NUM: %d\n", NeighbourCellParamList.numelt);
+  LOG_I(GNB_APP, "HO LOG: Neighbour Cell ELM NUM: %d\n", NeighbourCellParamList.numelt);
 
   if (NeighbourCellParamList.numelt < 1)
     return;
 
   for (int l = 0; l < NeighbourCellParamList.numelt; ++l) {
+    LOG_I(GNB_APP, "Neighbour Cell Param Parsing IK \n");
     nr_neighbour_gnb_configuration_t *neighbourCell =
         (nr_neighbour_gnb_configuration_t *)calloc(1, sizeof(nr_neighbour_gnb_configuration_t));
     neighbourCell->gNB_ID = *(NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_GNB_ID_IDX].uptr);
@@ -1501,7 +1502,7 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
     neighbourCell->subcarrierSpacing = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_SCS_IDX].uptr;
     neighbourCell->absoluteFrequencySSB = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_ABS_FREQ_SSB_IDX].i64ptr;
     neighbourCell->tac = *NeighbourCellParamList.paramarray[l][GNB_CONFIG_N_CELL_TAC_IDX].uptr;
-
+    LOG_I(GNB_APP, "Neighbour Cell Param Parsed IK %d\n", neighbourCell->gNB_ID);
     char neighbour_plmn_path[CONFIG_MAXOPTLENGTH];
     sprintf(neighbour_plmn_path,
             "%s.%s.[%i].%s",
@@ -1523,6 +1524,7 @@ static void fill_neighbour_cell_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc
 
 static void fill_measurement_configuration(uint8_t gnb_idx, gNB_RRC_INST *rrc)
 {
+  LOG_I(GNB_APP, "Fill Measurement Config enter IK");
   char measurement_path[MAX_OPTNAME_SIZE + 8];
   sprintf(measurement_path, "%s.[%i].%s", GNB_CONFIG_STRING_GNB_LIST, gnb_idx, GNB_CONFIG_STRING_MEASUREMENT_CONFIGURATION);
 
@@ -1603,7 +1605,7 @@ void RCconfig_NRRRC(gNB_RRC_INST *rrc)
   num_gnbs = GNBSParams[GNB_ACTIVE_GNBS_IDX].numelt;
   AssertFatal (i<num_gnbs,"Failed to parse config file no %uth element in %s \n",i, GNB_CONFIG_STRING_ACTIVE_GNBS);
   AssertFatal(num_gnbs == 1, "required section \"gNBs\" not in config!\n");
-
+  
   if (num_gnbs > 0) {
 
     // Output a list of all gNBs. ////////// Identification parameters
@@ -1665,14 +1667,17 @@ void RCconfig_NRRRC(gNB_RRC_INST *rrc)
     }       
     
     // search if in active list
-    LOG_I(GNB_APP, "gNB RRCConfigureReq IK \n");
+  
+    LOG_I(GNB_APP, "gNB RRCConfigureReq num_gnbs IK: %d\n", num_gnbs);
     gNB_RrcConfigurationReq nrrrc_config = {0};
     for (k=0; k <num_gnbs ; k++) {
+      LOG_I(GNB_APP, "gNB RRCConfigureReq IK_1 \n");
       if (strcmp(GNBSParams[GNB_ACTIVE_GNBS_IDX].strlistptr[k], *(GNBParamList.paramarray[i][GNB_GNB_NAME_IDX].strptr) )== 0) {
 	
         char gnbpath[MAX_OPTNAME_SIZE + 8];
         sprintf(gnbpath,"%s.[%i]",GNB_CONFIG_STRING_GNB_LIST,k);
-	      
+	      LOG_I(GNB_APP, "gNB RRCConfigureReq IK_2 value of k %d\n", k);
+
         fill_neighbour_cell_configuration(k, rrc);
 
         fill_measurement_configuration(k, rrc);

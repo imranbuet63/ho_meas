@@ -241,14 +241,24 @@ typedef enum {
 #define GNB_CONFIG_N_CELL_TAC_IDX                            5
 
 #define GNBNEIGHBOURCELLPARAMS_DESC {                                                                  \
-/*   optname                                                  helpstr                       paramflags  XXXptr     def val          type    numelt */ \
-  {GNB_CONFIG_STRING_GNB_ID,                                NULL,                                    0,           .uptr=NULL,   .defintval=0,                 TYPE_UINT,      0},    \
-  {GNB_CONFIG_STRING_NRCELLID,                              NULL,                                    0,           .u64ptr=NULL, .defint64val=1,               TYPE_UINT64,    0},    \
-  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_PHYSICAL_ID,            "neighbour cell physical id",            0,           .uptr=NULL,   .defuintval=1000,             TYPE_UINT,      0},    \
-  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_ABS_FREQ_SSB,           "neighbour cell abs freq ssb",           0,           .i64ptr=NULL, .defint64val=621312,          TYPE_INT64,     0},    \
-  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_SCS,                    "neighbour cell scs",                    0,           .uptr=NULL,   .defuintval=1,                TYPE_UINT,      0},    \
-  {GNB_CONFIG_STRING_NEIGHBOUR_TRACKING_ARE_CODE,           NULL,                                    0,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},  \
+/*   optname                                                  helpstr                                 paramflags                    XXXptr     def val          type    numelt */ \
+  {GNB_CONFIG_STRING_GNB_ID,                                "neighbour cell's gNB ID",               PARAMFLAG_MANDATORY,           .uptr=NULL,   .defintval=0,                 TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NRCELLID,                              "neighbour cell nrCell Id",              PARAMFLAG_MANDATORY,           .u64ptr=NULL, .defint64val=0,               TYPE_UINT64,    0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_PHYSICAL_ID,            "neighbour cell physical id",            PARAMFLAG_MANDATORY,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_ABS_FREQ_SSB,           "neighbour cell abs freq ssb",           PARAMFLAG_MANDATORY,           .i64ptr=NULL, .defint64val=0,               TYPE_INT64,     0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_CELL_SCS,                    "neighbour cell scs",                    PARAMFLAG_MANDATORY,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},    \
+  {GNB_CONFIG_STRING_NEIGHBOUR_TRACKING_ARE_CODE,           "neighbour cell tracking area",          PARAMFLAG_MANDATORY,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},    \
 }
+
+// #define GNBNEIGHBOURCELLPARAMS_DESC {                                                                  \
+// /*   optname                                                  helpstr                       paramflags  XXXptr     def val          type    numelt */ \
+//   {GNB_CONFIG_STRING_GNB_ID,                                NULL,                                    0,           .uptr=NULL,   .defintval=0,                 TYPE_UINT,      0},    \
+//   {GNB_CONFIG_STRING_NRCELLID,                              NULL,                                    0,           .u64ptr=NULL, .defint64val=1,               TYPE_UINT64,    0},    \
+//   {GNB_CONFIG_STRING_NEIGHBOUR_CELL_PHYSICAL_ID,            "neighbour cell physical id",            0,           .uptr=NULL,   .defuintval=1000,             TYPE_UINT,      0},    \
+//   {GNB_CONFIG_STRING_NEIGHBOUR_CELL_ABS_FREQ_SSB,           "neighbour cell abs freq ssb",           0,           .i64ptr=NULL, .defint64val=621312,          TYPE_INT64,     0},    \
+//   {GNB_CONFIG_STRING_NEIGHBOUR_CELL_SCS,                    "neighbour cell scs",                    0,           .uptr=NULL,   .defuintval=1,                TYPE_UINT,      0},    \
+//   {GNB_CONFIG_STRING_NEIGHBOUR_TRACKING_ARE_CODE,           NULL,                                    0,           .uptr=NULL,   .defuintval=0,                TYPE_UINT,      0},  \
+// }
 /* Measurement Event Configurations*/
 
 

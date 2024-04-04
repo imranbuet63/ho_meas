@@ -1987,6 +1987,7 @@ int rrc_gNB_decode_dcch(const protocol_ctxt_t *const ctxt_pP,
                         const sdu_size_t sdu_sizeP)
 //-----------------------------------------------------------------------------
 {
+  LOG_I(NR_RRC, "rrc Decode Dcch Enter IK!\n");
   gNB_RRC_INST *gnb_rrc_inst = RC.nrrrc[ctxt_pP->module_id];
 
   /* we look up by CU UE ID! Do NOT change back to RNTI! */
@@ -2022,8 +2023,9 @@ int rrc_gNB_decode_dcch(const protocol_ctxt_t *const ctxt_pP,
   if (LOG_DEBUGFLAG(DEBUG_ASN1)) {
     xer_fprint(stdout, &asn_DEF_NR_UL_DCCH_Message, (void *)ul_dcch_msg);
   }
-
+  LOG_I(NR_RRC, "rrc Decode Dcch before switch branch IK!\n");
   if (ul_dcch_msg->message.present == NR_UL_DCCH_MessageType_PR_c1) {
+    LOG_I(NR_RRC, "rrc Decode Dcch switch case!\n");
     switch (ul_dcch_msg->message.choice.c1->present) {
       case NR_UL_DCCH_MessageType__c1_PR_NOTHING:
         LOG_I(NR_RRC, "Received PR_NOTHING on UL-DCCH-Message\n");
@@ -2826,6 +2828,7 @@ static const char *get_pdusession_status_text(pdu_session_status_t status)
 
 static void write_rrc_stats(const gNB_RRC_INST *rrc)
 {
+  LOG_I(NR_RRC, "write rrc_stats Enter IK!\n");
   const char *filename = "nrRRC_stats.log";
   FILE *f = fopen(filename, "w");
   if (f == NULL) {
@@ -2877,8 +2880,12 @@ static void write_rrc_stats(const gNB_RRC_INST *rrc)
               get_ul_mimo_layers(cell_info, ue_ctxt->UE_Capability_nr));
     }
 
-    if (ue_ctxt->measResults)
+    if (ue_ctxt->measResults){
       print_rrc_meas(f, ue_ctxt->measResults);
+    }
+    else {
+      LOG_D(NR_RRC, "ue->ctxt measResults not found IK!\n");
+    }
     ++i;
   }
 

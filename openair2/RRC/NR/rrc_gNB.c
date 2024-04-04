@@ -1588,7 +1588,7 @@ static const NR_A3_EVENT_t *get_a3_configuration(int phyCellId)
 
 static void process_Periodical_Measurement_Report(rrc_gNB_ue_context_t *ue_context, NR_MeasurementReport_t *measurementReport)
 {
-  // LOG_I(NR_RRC, "Periodical Event Report! Do Nothing for now...\n");
+  LOG_I(NR_RRC, "Periodical Event Report! Do Nothing for now...\n");
   gNB_RRC_UE_t *ue_ctxt = &ue_context->ue_context;
   ASN_STRUCT_FREE(asn_DEF_NR_MeasResults, ue_ctxt->measResults);
   ue_ctxt->measResults = NULL;

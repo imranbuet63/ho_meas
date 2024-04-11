@@ -2777,6 +2777,7 @@ static void rrc_CU_process_f1_lost_connection(gNB_RRC_INST *rrc, f1ap_lost_conne
 
 static void print_rrc_meas(FILE *f, const NR_MeasResults_t *measresults)
 {
+  LOG_I(NR_RRC, "print rrc_meas Enter IK!\n");
   DevAssert(measresults->measResultServingMOList.list.count >= 1);
   if (measresults->measResultServingMOList.list.count > 1)
     LOG_W(RRC, "Received %d MeasResultServMO, but handling only 1!\n", measresults->measResultServingMOList.list.count);

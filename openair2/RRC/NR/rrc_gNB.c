@@ -2842,6 +2842,7 @@ static void write_rrc_stats(const gNB_RRC_INST *rrc)
   /* cast is necessary to eliminate warning "discards ‘const’ qualifier" */
   RB_FOREACH(ue_context_p, rrc_nr_ue_tree_s, &((gNB_RRC_INST *)rrc)->rrc_ue_head)
   {
+    LOG_I(NR_RRC, "write rrc_stats Enter loop IK!\n");
     const gNB_RRC_UE_t *ue_ctxt = &ue_context_p->ue_context;
     f1_ue_data_t ue_data = cu_get_f1_ue_data(ue_ctxt->rrc_ue_id);
     /* currently, we support only one DU. If we support multiple, need to

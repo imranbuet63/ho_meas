@@ -1589,6 +1589,20 @@ static const NR_A3_EVENT_t *get_a3_configuration(int phyCellId)
 static void process_Periodical_Measurement_Report(rrc_gNB_ue_context_t *ue_context, NR_MeasurementReport_t *measurementReport)
 {
   LOG_I(NR_RRC, "Periodical Event Report! Do Nothing for now...\n");
+
+  const NR_MeasResults_t *measResults = &measurementReport->criticalExtensions.choice.measurementReport->measResults;
+
+  for (int serving_cell_idx = 0; serving_cell_idx < measResults->measResultServingMOList.list.count; serving_cell_idx++) {
+    const NR_MeasResultServMO_t *meas_result_serv_MO = measResults->measResultServingMOList.list.array[serving_cell_idx];
+
+    if (meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell) {
+      servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell->rsrp) - 157;
+      } else {
+      servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;
+      }
+      LOG_D(NR_RRC, "Serving Cell RSRP: %d\n", servingCellRSRP);
+  }
+
   gNB_RRC_UE_t *ue_ctxt = &ue_context->ue_context;
   ASN_STRUCT_FREE(asn_DEF_NR_MeasResults, ue_ctxt->measResults);
   ue_ctxt->measResults = NULL;

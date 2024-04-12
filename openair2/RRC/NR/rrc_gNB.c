@@ -1595,9 +1595,11 @@ static void process_Periodical_Measurement_Report(rrc_gNB_ue_context_t *ue_conte
   const NR_MeasResults_t *measResults = &measurementReport->criticalExtensions.choice.measurementReport->measResults;
 
   for (int serving_cell_idx = 0; serving_cell_idx < measResults->measResultServingMOList.list.count; serving_cell_idx++) {
+    LOG_I(NR_RRC, "Periodical Event Report IK! Do Nothing for now...\n");
     const NR_MeasResultServMO_t *meas_result_serv_MO = measResults->measResultServingMOList.list.array[serving_cell_idx];
 
     if (meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell) {
+      LOG_I(NR_RRC, "Periodical Event Report RIMA! Do Nothing for now...\n");
       servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell->rsrp) - 157;
       } else {
       servingCellRSRP = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;

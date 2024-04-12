@@ -102,7 +102,7 @@
 #include "BIT_STRING.h"
 #include "assertions.h"
 
-#define XER_PRINT xer_fprint
+#define XER_PRINT 
 
 extern RAN_CONTEXT_t RC;
 

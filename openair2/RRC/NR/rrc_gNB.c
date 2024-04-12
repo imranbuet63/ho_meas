@@ -1590,6 +1590,8 @@ static void process_Periodical_Measurement_Report(rrc_gNB_ue_context_t *ue_conte
 {
   LOG_I(NR_RRC, "Periodical Event Report! Do Nothing for now...\n");
 
+  int servingCellRSRP = 0;
+  int neighbourCellRSRP = 0;
   const NR_MeasResults_t *measResults = &measurementReport->criticalExtensions.choice.measurementReport->measResults;
 
   for (int serving_cell_idx = 0; serving_cell_idx < measResults->measResultServingMOList.list.count; serving_cell_idx++) {
